@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>lamp23333 - 個人網站</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Microsoft JhengHei",sans-serif;background:#f7f8fa;color:#222;line-height:1.7;padding-top:80px}
+a{text-decoration:none;color:inherit}
+
+.nav{position:fixed;top:0;left:0;right:0;height:70px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-radius:0 0 16px 16px;z-index:999}
+.nav-left{display:flex;align-items:center;gap:12px}
+.avatar{width:44px;height:44px;border-radius:50%;background:#ddd;object-fit:cover}
+.nav-name{font-size:16px;font-weight:700}
+
+.lang-dropdown{position:relative}
+.lang-btn{background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:44px;height:44px}
+.lang-btn img{width:24px;height:24px;flex-shrink:0}
+.lang-menu{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);padding:8px 0;min-width:160px;display:none}
+.lang-dropdown.active .lang-menu{display:block}
+.lang-menu a{display:block;padding:10px 16px;font-size:14px}
+.lang-menu a:hover{background:#f2f3f5}
+
+.container{max-width:760px;margin:0 auto;padding:20px}
+h1{font-size:22px;font-weight:700;margin-bottom:24px;text-align:center}
+p{margin-bottom:18px;font-size:15px}
+</style>
+</head>
+
+<body>
+
+<div class="nav">
+  <div class="nav-left">
+    <img class="avatar" src="avatar.png" alt="頭像">
+    <div class="nav-name">lamp23333</div>
+  </div>
+  <div class="lang-dropdown">
+    <button class="lang-btn">
+      <img src="globe.svg" alt="語言切換">
+    </button>
+    <div class="lang-menu">
+      <a href="index.html">中文（簡體）</a>
+      <a href="index-tw.html">中文（繁體）</a>
+      <a href="index-en.html">English</a>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <h1>歡迎來到lamp23333的個人網站！</h1>
+  <p>我一直想擁有一個個人網站，卻常常因為申請正規域名和網絡伺服器需要長期付費而卻步，直到我遇見了GitHub Pages。</p>
+  <p>好吧，我其實痛恨自己為什麼沒有早點發現 GitHub 還有這種功能。</p>
+  <p>我是一個來自中國的高中生，熱愛科技，熱愛創新，熱愛遊戲，熱愛二次元，熱愛電音，熱愛生活。我嚮往那些年輕創作者的不凡，我想成為他們那樣的人。</p>
+  <p>我目前不具有能夠支撐我行動的技能，我不會寫程式、不會畫畫、不會做音樂、不會開發遊戲、不會管理團隊，我想付出一切代價去學，但我也和其他平凡的高中生一樣，有著繁忙的學業、激烈的競爭、外界的壓力、普通的家境。現在的我似乎只是在紙上談兵罷了，但我沒有能力，也沒有道理去幹我現在想幹的事情，因為「高考」擺在我的面前。</p>
+  <p>不過也許是為了能夠快一點達成目標，我從現在開始就做了一些準備。也許是分享慾的原因，我創建了這個網站，並把我的成果放在這裡。雖然似乎不會有什麼人來看。</p>
+  <p>我說過我什麼也不會，那麼我的成果從哪兒來的？其實是AI生成的。</p>
+  <p>雖然我也不認為AI可以替代一切創造，但是在概念性的想法直接轉換成實質性內容這方面，我只能說AI還是太好用了，但在未來我如果真的投入創作的話，我絕對不會使用它。</p>
+  <p>我想說的就這麼多，希望來到這裡的人可以諒解一下我在這個網站中展示的一切幼稚又可笑的想法。</p>
+  <p>感謝相遇。</p>
+</div>
+
+<script>
+const btn = document.querySelector('.lang-btn');
+const dropdown = document.querySelector('.lang-dropdown');
+btn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  dropdown.classList.toggle('active');
+});
+document.addEventListener('click', () => {
+  dropdown.classList.remove('active');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>lamp23333 - Personal Website</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f7f8fa;color:#222;line-height:1.7;padding-top:80px}
+a{text-decoration:none;color:inherit}
+
+.nav{position:fixed;top:0;left:0;right:0;height:70px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-radius:0 0 16px 16px;z-index:999}
+.nav-left{display:flex;align-items:center;gap:12px}
+.avatar{width:44px;height:44px;border-radius:50%;background:#ddd;object-fit:cover}
+.nav-name{font-size:16px;font-weight:700}
+
+.lang-dropdown{position:relative}
+.lang-btn{background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:44px;height:44px}
+.lang-btn img{width:24px;height:24px;flex-shrink:0}
+.lang-menu{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);padding:8px 0;min-width:160px;display:none}
+.lang-dropdown.active .lang-menu{display:block}
+.lang-menu a{display:block;padding:10px 16px;font-size:14px}
+.lang-menu a:hover{background:#f2f3f5}
+
+.container{max-width:760px;margin:0 auto;padding:20px}
+h1{font-size:22px;font-weight:700;margin-bottom:24px;text-align:center}
+p{margin-bottom:18px;font-size:15px}
+</style>
+</head>
+
+<body>
+
+<div class="nav">
+  <div class="nav-left">
+    <img class="avatar" src="avatar.png" alt="Avatar">
+    <div class="nav-name">lamp23333</div>
+  </div>
+  <div class="lang-dropdown">
+    <button class="lang-btn">
+      <img src="globe.svg" alt="Language">
+    </button>
+    <div class="lang-menu">
+      <a href="index.html">中文（简体）</a>
+      <a href="index-tw.html">中文（繁体）</a>
+      <a href="index-en.html">English</a>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <h1>Welcome to lamp23333's website!</h1>
+  <p>I’ve always wanted to have a personal website, but I was often held back by the recurring costs of registering a formal domain and paying for web hosting—until I discovered GitHub Pages.</p>
+  <p>Honestly, I hate myself for not finding out earlier that GitHub could do something like this.</p>
+  <p>I’m a high school student from China, passionate about technology, innovation, gaming, anime, electronic music, and my life. I admire the extraordinary young creators out there and want to become someone like them.</p>
+  <p>Right now, I don’t have the skills to support my ambitions. I can’t code, draw, make music, develop games, or manage a team. I’m willing to give everything to learn, but like any ordinary high school student in China, I’m caught up in a busy academic schedule, intense competition, external pressures, and a modest family background. It might seem like I’m just talking without acting—and I really don’t have the ability or the justification to do what I want to do right now, because the “Gaokao” (China’s National College Entrance Examination) is right in front of me.</p>
+  <p>Still, perhaps to get closer to my goals a little sooner, I’ve started preparing from now. Maybe out of a desire to share, I created this site and put my work here—even though hardly anyone might see it.</p>
+  <p>I said I can’t do anything, so where does my work come from? Well, it’s AI-generated.</p>
+  <p>Although I don’t believe AI can replace all creation, when it comes to turning conceptual ideas into tangible content, I have to admit AI is incredibly useful. But in the future, if I ever truly commit to creating, I won’t rely on it.</p>
+  <p>That’s all I wanted to say. I hope anyone who visits can understand—and maybe forgive—the naive and perhaps laughable ideas I’m sharing here.</p>
+  <p>Thanks for stopping by.</p>
+</div>
+
+<script>
+const btn = document.querySelector('.lang-btn');
+const dropdown = document.querySelector('.lang-dropdown');
+btn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  dropdown.classList.toggle('active');
+});
+document.addEventListener('click', () => {
+  dropdown.classList.remove('active');
+});
+</script>
+</body>
+</html>
