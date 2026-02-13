@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>lamp23333 - Personal Website</title>
+
+<link rel="stylesheet" href="style.css">
+<link rel="icon" type="image/x-icon" href="/favicon/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon/android-chrome-192x192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/favicon/android-chrome-512x512.png">
+<link rel="apple-touch-icon" href="/favicon/apple-touch-icon.png">
+<link rel="manifest" href="/favicon/site.webmanifest">
+
+</head>
+
+<body>
+
+<!-- 语言切换菜单 -->
+<div class="nav">
+  <div class="nav-left">
+    <img class="avatar" src="avatar.png" alt="头像">
+    <div class="nav-name">lamp23333</div>
+  </div>
+  <div class="lang-dropdown">
+    <button class="lang-btn">
+      <img src="globe.svg" alt="语言切换">
+    </button>
+    <div class="lang-menu">
+      <a href="index.html">中文（简体）</a>
+      <a href="index-tc.html">中文（繁體）</a>
+      <a href="index-en.html">English</a>
+    </div>
+  </div>
+</div>
+
+<!-- 主体 -->
+<div class="container">
+
+  <!-- 介绍 -->
+  <h1>Welcome to lamp23333's website!</h1>
+  <p>I’ve always wanted to have a personal website, but I was often held back by the recurring costs of registering a formal domain and paying for web hosting—until I discovered GitHub Pages.</p>
+  <p>Honestly, I hate myself for not finding out earlier that GitHub could do something like this.</p>
+  <p>I’m a high school student from China, passionate about technology, innovation, gaming, anime, electronic music, and my life. I admire the extraordinary young creators out there and want to become someone like them.</p>
+  <p>Right now, I don’t have the skills to support my ambitions. I can’t code, draw, make music, develop games, or manage a team. I’m willing to give everything to learn, but like any ordinary high school student in China, I’m caught up in a busy academic schedule, intense competition, external pressures, and a modest family background. It might seem like I’m just an armchair strategist, but I really don’t have the ability or the justification to do what I want to do right now, because the “Gaokao” <i style="color: rgba(0, 0, 0, 0.5);">(China’s National College Entrance Examination, or NCEE) </i>is right in front of me. That's almost the only way for me to establish myself in society and pursue my dreams.</p>
+  <p>Still, perhaps to get closer to my goals a little sooner, I’ve started preparing from now. Maybe out of a desire to share, I created this site and put my work here—even though hardly anyone might see it.</p>
+  <p>I said I can’t do anything, so where does my work come from? Well, it’s AI-generated.</p>
+  <p>Although I don’t believe AI can replace all creation, when it comes to turning conceptual ideas into tangible content, I have to admit AI is incredibly useful. But in the future, if I ever truly commit to creating, I won’t rely on it.</p>
+  <p>That’s all I wanted to say. I hope anyone who visits can understand—and maybe forgive—the naive and perhaps laughable ideas I’m sharing here.</p>
+  <p>Thanks for stopping by.</p>
+
+  <!-- 分隔线 + 导航 -->
+  <div class="divider"></div>
+  <div class="nav-title">导航</div>
+  <div class="button-group">
+    <a class="nav-button" href="page1.html">
+      <img src="icon1.svg" alt="">
+      <span>项目展示</span>
+    </a>
+    <a class="nav-button" href="page2.html">
+      <img src="icon2.svg" alt="">
+      <span>关于我</span>
+    </a>
+  </div>
+</div>
+
+<!-- 语言切换菜单逻辑 -->
+<script>
+const btn = document.querySelector('.lang-btn');
+const dropdown = document.querySelector('.lang-dropdown');
+btn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  dropdown.classList.toggle('active');
+});
+document.addEventListener('click', () => {
+  dropdown.classList.remove('active');
+});
+</script>
+
+</body>
+</html>

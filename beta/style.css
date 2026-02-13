@@ -1,0 +1,49 @@
+/* 全局样式 */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Microsoft YaHei",sans-serif;background:#f7f8fa;color:#222;line-height:1.7;padding-top:80px}
+a{text-decoration:none;color:inherit}
+
+/* 导航栏样式 */
+.nav{position:fixed;top:0;left:0;right:0;height:70px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-radius:0 0 16px 16px;z-index:999}
+.nav-left{display:flex;align-items:center;gap:12px}
+.avatar{width:44px;height:44px;border-radius:50%;background:#ddd;object-fit:cover}
+.nav-name{font-size:16px;font-weight:700}
+
+/* 语言切换菜单样式 */
+.lang-dropdown{position:relative}
+.lang-btn{background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:44px;height:44px}
+.lang-btn img{width:24px;height:24px;flex-shrink:0}
+.lang-menu{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);padding:8px 0;min-width:160px;display:none}
+.lang-dropdown.active .lang-menu{display:block}
+.lang-menu a{display:block;padding:10px 16px;font-size:14px}
+.lang-menu a:hover{background:#f2f3f5}
+
+/* 主体样式 */
+.container{max-width:760px;margin:0 auto;padding:20px}
+h1{font-size:22px;font-weight:700;margin-bottom:24px;text-align:center}
+p{margin-bottom:18px;font-size:15px}
+
+/* 分隔线样式 */
+.divider{height:1px;background:#eee;margin:40px 0 20px 0}
+
+/* 导航栏标题样式 */
+.nav-title{font-size:18px;font-weight:700;margin-bottom:20px;text-align:center}
+
+/* 按钮组样式 */
+.button-group{display:flex;gap:16px;flex-wrap:wrap}
+.nav-button{
+  display:flex;align-items:center;gap:12px;
+  background:#fff;border:1px solid #eee;border-radius:12px;
+  padding:16px 20px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.03);
+  flex:1;min-width:200px
+}
+.nav-button:hover{border-color:#ccc}
+.nav-button img{width:20px;height:20px;flex-shrink:0}
+.nav-button span{font-size:15px;font-weight:500}
+
+/* 手机自适应 */
+@media (max-width:500px){
+  .button-group{flex-direction:column}
+  .nav-button{width:100%}
+}
