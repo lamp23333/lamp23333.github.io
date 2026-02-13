@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>LAMP白炽灯 - 个人网站</title>
+
+<link rel="stylesheet" href="/bata/style.css">
+<link rel="icon" type="image/x-icon" href="/beta/favicon/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="/beta/favicon/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/beta/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/beta/favicon/android-chrome-192x192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/beta/favicon/android-chrome-512x512.png">
+<link rel="apple-touch-icon" href="/beta/favicon/apple-touch-icon.png">
+<link rel="manifest" href="/beta/favicon/site.webmanifest">
+
+</head>
+
+<body>
+
+<!-- 语言切换菜单 -->
+<div class="nav">
+  <div class="nav-left">
+    <img class="avatar" src="/beta/avatar.png" alt="头像">
+    <div class="nav-name">LAMP白炽灯</div>
+  </div>
+  <div class="lang-dropdown">
+    <button class="lang-btn">
+      <img src="/beta/globe.svg" alt="语言切换">
+    </button>
+    <div class="lang-menu">
+      <a href="/beta/index.html">中文（简体）</a>
+      <a href="/beta/index-tc.html">中文（繁體）</a>
+      <a href="/beta/index-en.html">English</a>
+    </div>
+  </div>
+</div>
+
+<!-- 主体 -->
+<div class="container">
+
+  <!-- 介绍 -->
+  <h1>欢迎来到LAMP白炽灯的个人网站！</h1>
+  <p>我一直想拥有一个个人网站，却常常因为申请正规域名和网络服务器需要长期付费而却步，直到我遇见了GitHub Pages。</p>
+  <p>好吧我其实痛恨自己为什么没有早点发现 GitHub 还有这种功能。</p>
+  <p>我是一个来自中国的高中生，热爱科技，热爱创新，热爱游戏，热爱二次元，热爱电音，热爱生活。我向往那些年轻创作者的不凡，我想成为他们那样的人。</p>
+  <p>我目前不具有能够支撑我行动的技能，我不会写代码、不会画画、不会做音乐、不会开发游戏、不会管理团队，我想付出一切代价去学，但我也和其他平凡的高中生一样，有着繁忙的学业、激烈的竞争、外界的压力、普通的家境。现在的我似乎只是在纸上谈兵罢了，但我没有能力，也没有道理去干我现在想干的事情，因为“高考”摆在我的面前。</p>
+  <p>不过也许是为了能够快一点达成目标，我从现在开始就做了一些准备。也许是分享欲的原因，我创建了这个网站，并把我的成果放在这里。虽然似乎不会有什么人来看。</p>
+  <p>我说过我什么也不会，那么我的成果从哪儿来的，其实是AI生成的。</p>
+  <p>虽然我也不认为AI可以替代一切创造，但是在概念性的想法直接转换成实质性内容这方面，我只能说AI还是太好用了，但在未来我如果真的投入创作的话，我绝对不会使用它。</p>
+  <p>我想说的就这么多，希望来到这里的人可以谅解一下我在这个网站中展示的一切幼稚又可笑的想法。</p>
+  <p>感谢相遇。</p>
+
+  <!-- 分隔线 + 导航 -->
+  <div class="divider"></div>
+  <div class="nav-title">导航</div>
+  <div class="button-group">
+    <a class="nav-button" href="page1.html">
+      <img src="icon1.svg" alt="">
+      <span>项目展示</span>
+    </a>
+    <a class="nav-button" href="page2.html">
+      <img src="icon2.svg" alt="">
+      <span>关于我</span>
+    </a>
+  </div>
+</div>
+
+<!-- 语言切换菜单逻辑 -->
+<script>
+const btn = document.querySelector('.lang-btn');
+const dropdown = document.querySelector('.lang-dropdown');
+btn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  dropdown.classList.toggle('active');
+});
+document.addEventListener('click', () => {
+  dropdown.classList.remove('active');
+});
+</script>
+
+</body>
+</html>
