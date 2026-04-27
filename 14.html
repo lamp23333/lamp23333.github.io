@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>圆锥内切球教学演示 | 第14题：轴截面+球心+连线+切点圆环</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, 'Microsoft YaHei', sans-serif;
+            background-color: #050a14;
+        }
+        .split-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .view {
+            flex: 1;
+            position: relative;
+            border-right: 1px solid rgba(100, 150, 255, 0.4);
+            box-shadow: 0 0 15px rgba(0,0,0,0.3);
+        }
+        .view:last-child {
+            border-right: none;
+        }
+        .view-title {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.95);
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            padding: 5px 16px;
+            border-radius: 32px;
+            width: fit-content;
+            margin: 0 auto;
+            pointer-events: none;
+            z-index: 10;
+            font-family: monospace;
+            letter-spacing: 1px;
+            border: 1px solid rgba(255,200,100,0.5);
+        }
+        .param-badge {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            padding: 5px 14px;
+            border-radius: 28px;
+            font-size: 0.8rem;
+            color: #ffdd99;
+            font-family: monospace;
+            border-left: 3px solid #ffaa55;
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .param-badge span {
+            color: #ffaa66;
+            font-weight: bold;
+        }
+        .interaction-hint {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.5);
+            color: #ccc;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            pointer-events: none;
+            font-family: monospace;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+        }
+        @media (max-width: 700px) {
+            .view-title { font-size: 0.7rem; bottom: 12px; }
+            .param-badge { font-size: 0.65rem; top: 10px; right: 10px; }
+            .interaction-hint { font-size: 9px; }
+        }
+    </style>
+</head>
+<body>
+<div class="split-container">
+    <!-- 左侧：第一问 - 三个半径为1的球体 -->
+    <div id="view-left" class="view">
+        <div class="view-title">📐 第一问：三个半径 r = 1 的球体（半透明+轮廓+球心+连线）</div>
+        <div class="param-badge">✨ 圆锥底面半径 <span>R = 5/√3 ≈ 2.8868</span></div>
+        <div class="interaction-hint">🖱️ 拖拽旋转 | 右键平移 | 滚动缩放 | 金色小球为球心 | 细圆环为切点</div>
+    </div>
+
+    <!-- 右侧：第二问 - 增加一个小球 -->
+    <div id="view-right" class="view">
+        <div class="view-title">🔮 第二问：增加小球（与三大球及圆锥侧面相切）</div>
+        <div class="param-badge">🔵 小球半径 <span>r = (9−4√2)/3 ≈ 1.1144</span></div>
+        <div class="interaction-hint">🖱️ 拖拽旋转 | 右键平移 | 滚动缩放 | 橙色圆环为切点 | 球心连线清晰可见</div>
+    </div>
+</div>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    
+    // ========= 几何参数 ==========
+    const R_CONE = 5 / Math.sqrt(3);      // 底面半径 ≈2.886751
+    const H_CONE = 5;                     // 圆锥高度
+    const BIG_RADIUS = 1.0;
+    const D_BIG = 2 / Math.sqrt(3);       // 大球心距轴线距离
+    const Y_BIG = 1.0;                    // 大球心高度
+    const SMALL_R = (9 - 4 * Math.sqrt(2)) / 3;   // ≈1.11438
+    const Y_SMALL = H_CONE - 2 * SMALL_R;         // ≈2.77124
+    
+    // 切点几何: 球与圆锥侧面相切，切点相对于球心的垂直偏移 = 半径 * sin(π/3)
+    const SIN_BETA = Math.sin(Math.PI / 3);
+    const Y_CUT_BIG = Y_BIG + BIG_RADIUS * SIN_BETA;
+    const Y_CUT_SMALL = Y_SMALL + SMALL_R * SIN_BETA;
+    function coneRadiusAtY(y) { return R_CONE * (H_CONE - y) / H_CONE; }
+    const cutRadiusBig = coneRadiusAtY(Y_CUT_BIG);
+    const cutRadiusSmall = coneRadiusAtY(Y_CUT_SMALL);
+    
+    // 三大球心坐标
+    const angles = [0, 120, 240].map(deg => deg * Math.PI / 180);
+    const bigCenters = angles.map(ang => new THREE.Vector3(D_BIG * Math.cos(ang), Y_BIG, D_BIG * Math.sin(ang)));
+    const smallCenter = new THREE.Vector3(0, Y_SMALL, 0);
+    
+    console.log(`切点圆半径 - 大球: ${cutRadiusBig.toFixed(4)} , 小球: ${cutRadiusSmall.toFixed(4)}`);
+    
+    // ---------- 通用场景设置函数 ----------
+    function setupScene(containerId, withSmallBall) {
+        const container = document.getElementById(containerId);
+        if (!container) return null;
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        container.appendChild(renderer.domElement);
+        
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0f1e);
+        scene.fog = new THREE.FogExp2(0x0a0f1e, 0.008);
+        
+        const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 1000);
+        camera.position.set(5.5, 4.2, 7.0);
+        camera.lookAt(0, 2.5, 0);
+        
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.06;
+        controls.rotateSpeed = 1.2;
+        controls.zoomSpeed = 1.2;
+        controls.panSpeed = 0.8;
+        controls.enableZoom = true;
+        controls.enablePan = true;
+        controls.target.set(0, 2.5, 0);
+        
+        // ========= 灯光 =========
+        const ambientLight = new THREE.AmbientLight(0x404060);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        dirLight.position.set(3, 8, 2.5);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+        const backLight = new THREE.PointLight(0xffaa66, 0.55);
+        backLight.position.set(-2, 3.5, -3.5);
+        scene.add(backLight);
+        const fillLight = new THREE.PointLight(0x6688ff, 0.5);
+        fillLight.position.set(1.5, 1.2, 2);
+        scene.add(fillLight);
+        const hemiLight = new THREE.HemisphereLight(0x6d7f8f, 0x3a4a5e, 0.65);
+        scene.add(hemiLight);
+        
+        // 辅助网格
+        const gridHelper = new THREE.GridHelper(12, 20, 0x88aaff, 0x335588);
+        gridHelper.position.y = -0.08;
+        gridHelper.material.transparent = true;
+        gridHelper.material.opacity = 0.25;
+        scene.add(gridHelper);
+        
+        // 底面装饰圆环
+        const baseRingGeo = new THREE.TorusGeometry(R_CONE, 0.02, 64, 200);
+        const baseRingMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0x442200 });
+        const bottomRing = new THREE.Mesh(baseRingGeo, baseRingMat);
+        bottomRing.rotation.x = Math.PI / 2;
+        bottomRing.position.y = 0.01;
+        scene.add(bottomRing);
+        
+        // ========= 圆锥 (半透明双面) =========
+        const coneGeo = new THREE.CylinderGeometry(0, R_CONE, H_CONE, 96, 64, false);
+        const coneMaterial = new THREE.MeshPhongMaterial({
+            color: 0x4a80e6,
+            transparent: true,
+            opacity: 0.22,
+            side: THREE.DoubleSide,
+            emissive: 0x001133,
+            specular: 0xaaaaaa,
+            shininess: 70
+        });
+        const cone = new THREE.Mesh(coneGeo, coneMaterial);
+        cone.position.y = H_CONE / 2;
+        cone.castShadow = true;
+        scene.add(cone);
+        
+        // 圆锥边缘线框
+        const edgesGeo = new THREE.EdgesGeometry(coneGeo);
+        const edgesMat = new THREE.LineBasicMaterial({ color: 0x88bbff });
+        const wireframe = new THREE.LineSegments(edgesGeo, edgesMat);
+        wireframe.position.copy(cone.position);
+        scene.add(wireframe);
+        
+        // ========= 轴截面 (半透明平面) =========
+        const axialPlaneGeo = new THREE.PlaneGeometry(H_CONE + 0.5, R_CONE * 1.8);
+        const axialPlaneMat = new THREE.MeshPhongMaterial({
+            color: 0x77aaff,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.16,
+            emissive: 0x112244
+        });
+        const axialPlane = new THREE.Mesh(axialPlaneGeo, axialPlaneMat);
+        axialPlane.rotation.y = Math.PI / 2;
+        axialPlane.position.set(0, H_CONE / 2, 0);
+        scene.add(axialPlane);
+        
+        // 母线辅助线 (轴截面边界)
+        const axisLineMat = new THREE.LineBasicMaterial({ color: 0x88aaff, transparent: true, opacity: 0.5 });
+        const apex = new THREE.Vector3(0, H_CONE, 0);
+        const rightEdge = new THREE.Vector3(R_CONE, 0, 0);
+        const leftEdge = new THREE.Vector3(-R_CONE, 0, 0);
+        const rightLineGeo = new THREE.BufferGeometry().setFromPoints([apex, rightEdge]);
+        const leftLineGeo = new THREE.BufferGeometry().setFromPoints([apex, leftEdge]);
+        const rightLine = new THREE.Line(rightLineGeo, axisLineMat);
+        const leftLine = new THREE.Line(leftLineGeo, axisLineMat);
+        scene.add(rightLine);
+        scene.add(leftLine);
+        
+        // ========= 三大球体 (半透明+轮廓) =========
+        const bigBallMat = new THREE.MeshPhongMaterial({
+            color: 0xdd6a5a,
+            shininess: 60,
+            transparent: true,
+            opacity: 0.65,
+            emissive: 0x331100
+        });
+        const bigBalls = [];
+        bigCenters.forEach(center => {
+            const sphere = new THREE.Mesh(new THREE.SphereGeometry(BIG_RADIUS, 72, 72), bigBallMat);
+            sphere.position.copy(center);
+            sphere.castShadow = true;
+            scene.add(sphere);
+            // 球体轮廓线
+            const edgesSphere = new THREE.EdgesGeometry(sphere.geometry);
+            const edgesMatSphere = new THREE.LineBasicMaterial({ color: 0xffaa88 });
+            const wireSphere = new THREE.LineSegments(edgesSphere, edgesMatSphere);
+            sphere.add(wireSphere);
+            bigBalls.push(sphere);
+        });
+        
+        // ========= 球心标记 (高亮小球体) =========
+        const centerMarkerMat = new THREE.MeshStandardMaterial({ color: 0xffcc44, emissive: 0xaa6622, emissiveIntensity: 0.6 });
+        const markerRadius = 0.08;
+        bigCenters.forEach(center => {
+            const marker = new THREE.Mesh(new THREE.SphereGeometry(markerRadius, 24, 24), centerMarkerMat);
+            marker.position.copy(center);
+            scene.add(marker);
+        });
+        
+        // ========= 球心连线 (大球之间) =========
+        const connectMat = new THREE.LineBasicMaterial({ color: 0xffaa77, linewidth: 2 }); // linewidth not supported everywhere but color works
+        for (let i = 0; i < bigCenters.length; i++) {
+            for (let j = i+1; j < bigCenters.length; j++) {
+                const points = [bigCenters[i], bigCenters[j]];
+                const geo = new THREE.BufferGeometry().setFromPoints(points);
+                const line = new THREE.Line(geo, connectMat);
+                scene.add(line);
+            }
+        }
+        
+        // ========= 大球切点圆环 (细化) =========
+        const cutCircleMat = new THREE.MeshStandardMaterial({ color: 0xffaa55, emissive: 0x442200 });
+        // 管径减小到 0.018，更细
+        const torusBigCut = new THREE.Mesh(new THREE.TorusGeometry(cutRadiusBig, 0.018, 64, 200), cutCircleMat);
+        torusBigCut.rotation.x = Math.PI / 2;
+        torusBigCut.position.y = Y_CUT_BIG;
+        scene.add(torusBigCut);
+        
+        // 添加辅助发光细环 (可选)
+        const glowRingMat = new THREE.MeshStandardMaterial({ color: 0xffaa77, transparent: true, opacity: 0.5 });
+        const outerRing = new THREE.Mesh(new THREE.TorusGeometry(cutRadiusBig + 0.02, 0.012, 64, 200), glowRingMat);
+        outerRing.rotation.x = Math.PI / 2;
+        outerRing.position.y = Y_CUT_BIG;
+        scene.add(outerRing);
+        
+        // 底面相切点小标记 (球与底面接触点)
+        const contactMat = new THREE.MeshStandardMaterial({ color: 0xff8844 });
+        bigCenters.forEach(center => {
+            const dot = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 12), contactMat);
+            dot.position.set(center.x, 0, center.z);
+            scene.add(dot);
+        });
+        
+        // ========= 第二问专属：小球及关联元素 =========
+        let smallBall = null;
+        let smallGlow = null;
+        let smallCutTorus = null;
+        let smallMarker = null;
+        
+        if (withSmallBall) {
+            // 小球体半透明
+            const smallMat = new THREE.MeshPhongMaterial({
+                color: 0x6cbf7a,
+                shininess: 65,
+                transparent: true,
+                opacity: 0.7,
+                emissive: 0x115522
+            });
+            smallBall = new THREE.Mesh(new THREE.SphereGeometry(SMALL_R, 96, 96), smallMat);
+            smallBall.position.copy(smallCenter);
+            smallBall.castShadow = true;
+            scene.add(smallBall);
+            
+            // 小球轮廓线
+            const smallEdges = new THREE.EdgesGeometry(smallBall.geometry);
+            const smallEdgesMat = new THREE.LineBasicMaterial({ color: 0xaaffaa });
+            const smallWire = new THREE.LineSegments(smallEdges, smallEdgesMat);
+            smallBall.add(smallWire);
+            
+            // 小球光晕 (半透明外球)
+            const glowMat = new THREE.MeshPhongMaterial({
+                color: 0x88ffaa,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.BackSide
+            });
+            smallGlow = new THREE.Mesh(new THREE.SphereGeometry(SMALL_R * 1.2, 48, 48), glowMat);
+            smallGlow.position.copy(smallCenter);
+            scene.add(smallGlow);
+            
+            // 小球球心标记
+            smallMarker = new THREE.Mesh(new THREE.SphereGeometry(markerRadius, 24, 24), centerMarkerMat);
+            smallMarker.position.copy(smallCenter);
+            scene.add(smallMarker);
+            
+            // 小球切点圆环 (细化)
+            const smallCutMat = new THREE.MeshStandardMaterial({ color: 0xffaa77, emissive: 0x553300 });
+            smallCutTorus = new THREE.Mesh(new THREE.TorusGeometry(cutRadiusSmall, 0.018, 64, 200), smallCutMat);
+            smallCutTorus.rotation.x = Math.PI / 2;
+            smallCutTorus.position.y = Y_CUT_SMALL;
+            scene.add(smallCutTorus);
+            
+            // 大球与小球之间的球心连线
+            const smallConnectMat = new THREE.LineBasicMaterial({ color: 0x88ddff, linewidth: 1 });
+            bigCenters.forEach(center => {
+                const points = [smallCenter, center];
+                const geo = new THREE.BufferGeometry().setFromPoints(points);
+                const line = new THREE.Line(geo, smallConnectMat);
+                scene.add(line);
+            });
+        }
+        
+        // 动态呼吸效果
+        let time = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.016;
+            controls.update();
+            
+            // 让切点圆环和球心标记微微脉动
+            const scale = 1 + Math.sin(time * 4) * 0.05;
+            if (torusBigCut) torusBigCut.scale.set(scale, 1, scale);
+            if (withSmallBall && smallCutTorus) smallCutTorus.scale.set(scale, 1, scale);
+            
+            if (withSmallBall && smallGlow) {
+                const glowScale = 1 + Math.sin(time * 3) * 0.03;
+                smallGlow.scale.set(glowScale, glowScale, glowScale);
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        function handleResize() {
+            const newWidth = container.clientWidth;
+            const newHeight = container.clientHeight;
+            renderer.setSize(newWidth, newHeight);
+            camera.aspect = newWidth / newHeight;
+            camera.updateProjectionMatrix();
+        }
+        window.addEventListener('resize', handleResize);
+        
+        return { renderer, camera, controls, handleResize };
+    }
+    
+    // 初始化左右场景
+    setupScene('view-left', false);
+    setupScene('view-right', true);
+    
+    window.dispatchEvent(new Event('resize'));
+    console.log("可视化已启动 | 球心标记(金色) | 球心连线(黄/青色) | 切点圆环细化 | 轴截面半透明");
+</script>
+</body>
+</html>
