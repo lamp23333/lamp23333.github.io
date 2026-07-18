@@ -1,0 +1,2598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>万能工具</title>
+
+    <!-- Apple 风格字体 & 图标库 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+    <style>
+        /* ===== 全局重置 & 设计令牌 ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --bg-primary: #f2f2f7;
+            --bg-secondary: rgba(255, 255, 255, 0.72);
+            --bg-tool: rgba(255, 255, 255, 0.64);
+            --bg-panel: rgba(255, 255, 255, 0.82);
+            --text-primary: #1c1c1e;
+            --text-secondary: #3a3a3c;
+            --text-tertiary: #8e8e93;
+            --separator: rgba(60, 60, 67, 0.08);
+            --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.02);
+            --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.02);
+            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.15);
+            --radius-sm: 12px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-full: 9999px;
+            --blur-amount: 30px;
+            --safe-top: env(safe-area-inset-top, 20px);
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
+            --header-height: 56px;
+            --tab-height: 72px;
+            --panel-radius: 28px;
+            --transition-spring: cubic-bezier(0.32, 0.72, 0, 1);
+            --card-radius: 16px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #0a0a0c;
+                --bg-secondary: rgba(28, 28, 30, 0.8);
+                --bg-tool: rgba(44, 44, 46, 0.7);
+                --bg-panel: rgba(28, 28, 30, 0.88);
+                --text-primary: #f5f5f7;
+                --text-secondary: #aeaeb2;
+                --text-tertiary: #636366;
+                --separator: rgba(255, 255, 255, 0.08);
+                --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.3);
+                --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.4);
+                --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* ===== 应用容器 ===== */
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            background: var(--bg-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ===== 顶部导航 ===== */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            height: var(--header-height);
+            padding: 0 20px;
+            padding-top: var(--safe-top);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-secondary);
+            backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+            border-bottom: 1px solid var(--separator);
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            color: var(--text-primary);
+        }
+        .header-title i {
+            margin-right: 8px;
+            color: var(--text-tertiary);
+        }
+
+        .header-action {
+            font-size: 15px;
+            font-weight: 400;
+            color: var(--text-tertiary);
+            background: none;
+            border: none;
+            padding: 6px 12px;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            transition: background 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .header-action:active {
+            background: rgba(0, 0, 0, 0.05);
+            transform: scale(0.96);
+        }
+
+        /* ===== 内容区 ===== */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px 16px calc(var(--tab-height) + var(--safe-bottom) + 16px);
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+        }
+        .content::-webkit-scrollbar {
+            width: 0;
+            background: transparent;
+        }
+
+        /* 移除滚动边缘阴影 */
+        .content::before,
+        .content::after {
+            display: none;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+            margin: 24px 0 12px 4px;
+        }
+        .section-title:first-of-type {
+            margin-top: 4px;
+        }
+
+        /* ===== 工具网格 ===== */
+        .tool-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        /* ===== 工具卡片 ===== */
+        .tool-card {
+            background: var(--bg-tool);
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
+            border-radius: var(--card-radius);
+            padding: 18px 14px 16px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.15s var(--transition-spring),
+                box-shadow 0.15s ease,
+                opacity 0.25s ease;
+            transform: scale(1);
+            position: relative;
+            will-change: transform;
+        }
+        .tool-card:active {
+            transform: scale(0.94);
+            box-shadow: var(--shadow-sm);
+        }
+        .tool-card.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        @media (prefers-color-scheme: dark) {
+            .tool-card {
+                border-color: rgba(255, 255, 255, 0.06);
+            }
+        }
+        .tool-card .icon {
+            font-size: 28px;
+            display: block;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+        .tool-card .name {
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+        .tool-card .desc {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+            line-height: 1.4;
+            letter-spacing: 0.01em;
+        }
+
+        /* ===== 面板遮罩 ===== */
+        .panel-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 90;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(0px);
+            -webkit-backdrop-filter: blur(0px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s var(--transition-spring),
+                backdrop-filter 0.5s var(--transition-spring);
+            will-change: opacity, backdrop-filter;
+        }
+        .panel-overlay.active {
+            opacity: 1;
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            pointer-events: auto;
+        }
+
+        /* ===== 共享元素面板 ===== */
+        .shared-panel {
+            position: fixed;
+            z-index: 100;
+            background: var(--bg-panel);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            will-change: transform, left, top, width, height, border-radius, backdrop-filter;
+            transition: left 0.55s var(--transition-spring),
+                top 0.55s var(--transition-spring),
+                width 0.55s var(--transition-spring),
+                height 0.55s var(--transition-spring),
+                border-radius 0.55s var(--transition-spring),
+                backdrop-filter 0.55s var(--transition-spring),
+                opacity 0.4s ease;
+            pointer-events: none;
+            opacity: 0;
+            backdrop-filter: blur(0px) saturate(180%);
+            -webkit-backdrop-filter: blur(0px) saturate(180%);
+            display: flex;
+            flex-direction: column;
+        }
+        .shared-panel.open {
+            pointer-events: auto;
+            opacity: 1;
+        }
+        .shared-panel .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 20px 12px 20px;
+            border-bottom: 1px solid var(--separator);
+            flex-shrink: 0;
+        }
+        .shared-panel .panel-title {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .shared-panel .panel-title i {
+            font-size: 22px;
+            color: var(--text-tertiary);
+        }
+        .shared-panel .panel-close {
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: var(--radius-full);
+            transition: background 0.15s ease, transform 0.15s var(--transition-spring);
+            -webkit-tap-highlight-color: transparent;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .shared-panel .panel-close:active {
+            background: rgba(0, 0, 0, 0.05);
+            transform: scale(0.88);
+        }
+        .shared-panel .panel-body {
+            flex: 1;
+            padding: 16px 20px 20px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+        .shared-panel .panel-body::-webkit-scrollbar {
+            width: 4px;
+        }
+        .shared-panel .panel-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .shared-panel .panel-body::-webkit-scrollbar-thumb {
+            background: var(--text-tertiary);
+            border-radius: 4px;
+        }
+
+        /* ===== 工具内部控件 ===== */
+        .tool-body label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: block;
+            margin-top: 14px;
+            margin-bottom: 4px;
+        }
+        .tool-body label:first-of-type {
+            margin-top: 0;
+        }
+        .tool-body input,
+        .tool-body select,
+        .tool-body textarea {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 16px;
+            font-family: var(--font);
+            background: var(--bg-tool);
+            border: 1px solid var(--separator);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .tool-body input:focus,
+        .tool-body select:focus,
+        .tool-body textarea:focus {
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+        }
+        .tool-body textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        .tool-body .result {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--bg-tool);
+            border-radius: var(--radius-sm);
+            font-size: 18px;
+            font-weight: 500;
+            text-align: center;
+            color: var(--text-primary);
+            border: 1px solid var(--separator);
+            word-break: break-all;
+        }
+        .tool-body .result small {
+            font-weight: 400;
+            font-size: 14px;
+            color: var(--text-tertiary);
+            display: block;
+            margin-top: 4px;
+        }
+        .tool-body .btn-primary {
+            width: 100%;
+            margin-top: 16px;
+            padding: 14px;
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 17px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.15s var(--transition-spring),
+                background 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+            font-family: var(--font);
+        }
+        .tool-body .btn-primary:active {
+            transform: scale(0.96);
+            background: #0066d9;
+        }
+        .tool-body .row {
+            display: flex;
+            gap: 10px;
+        }
+        .tool-body .row>* {
+            flex: 1;
+        }
+        .tool-body .mt-8 {
+            margin-top: 8px;
+        }
+        .tool-body .text-center {
+            text-align: center;
+        }
+        .tool-body .text-muted {
+            color: var(--text-tertiary);
+            font-size: 13px;
+        }
+
+        /* ===== 自定义文件选择 ===== */
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        .file-input-wrapper .file-label {
+            display: block;
+            padding: 14px;
+            background: var(--bg-tool);
+            border: 1px dashed var(--separator);
+            border-radius: var(--radius-sm);
+            text-align: center;
+            color: var(--text-secondary);
+            transition: border-color 0.2s ease, background 0.2s ease;
+            font-size: 16px;
+        }
+        .file-input-wrapper .file-label:hover {
+            border-color: #007aff;
+            background: var(--bg-secondary);
+        }
+        .file-input-wrapper .file-label i {
+            margin-right: 8px;
+            color: var(--text-tertiary);
+        }
+
+        /* ===== 计算器按键 ===== */
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .calc-grid button {
+            padding: 14px 0;
+            font-size: 20px;
+            font-weight: 500;
+            background: var(--bg-tool);
+            border: 1px solid var(--separator);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: transform 0.1s ease, background 0.1s ease;
+            font-family: var(--font);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .calc-grid button:active {
+            transform: scale(0.92);
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .calc-grid .calc-op {
+            background: #007aff;
+            color: white;
+            border-color: #007aff;
+        }
+        .calc-grid .calc-op:active {
+            background: #0066d9;
+        }
+        .calc-grid .calc-eq {
+            background: #34c759;
+            color: white;
+            border-color: #34c759;
+        }
+        .calc-grid .calc-eq:active {
+            background: #28a745;
+        }
+        .calc-grid .calc-clear {
+            background: #ff3b30;
+            color: white;
+            border-color: #ff3b30;
+        }
+        .calc-grid .calc-clear:active {
+            background: #d63031;
+        }
+        .calc-display {
+            background: var(--bg-tool);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            text-align: right;
+            font-size: 18px;
+            font-weight: 500;
+            border: 1px solid var(--separator);
+            min-height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            word-break: break-all;
+        }
+        .calc-display .expr {
+            font-size: 14px;
+            color: var(--text-tertiary);
+            font-weight: 400;
+            margin-bottom: 4px;
+        }
+        .calc-display .result {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* ===== 计时器 ===== */
+        .timer-display {
+            font-size: 48px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            text-align: center;
+            padding: 16px 0;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-primary);
+        }
+        .timer-btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .timer-btns button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.15s var(--transition-spring);
+            -webkit-tap-highlight-color: transparent;
+            font-family: var(--font);
+        }
+        .timer-btns button:active {
+            transform: scale(0.94);
+        }
+        .btn-start {
+            background: #34c759;
+            color: white;
+        }
+        .btn-pause {
+            background: #ff9500;
+            color: white;
+        }
+        .btn-reset {
+            background: var(--separator);
+            color: var(--text-secondary);
+        }
+
+        /* ===== 底部标签栏 ===== */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 40;
+            max-width: 480px;
+            margin: 0 auto;
+            height: calc(var(--tab-height) + var(--safe-bottom));
+            padding-bottom: var(--safe-bottom);
+            background: var(--bg-secondary);
+            backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+            border-top: 1px solid var(--separator);
+            display: flex;
+            align-items: stretch;
+            justify-content: space-around;
+            box-shadow: none;
+        }
+        .tab-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            padding: 4px 0;
+            font-family: var(--font);
+        }
+        .tab-item .tab-icon {
+            font-size: 22px;
+            line-height: 1;
+            transition: transform 0.2s var(--transition-spring);
+        }
+        .tab-item:active .tab-icon {
+            transform: scale(0.88);
+        }
+        .tab-item.active {
+            color: #007aff;
+        }
+
+        /* ===== 标签页面板 ===== */
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: block;
+            animation: fadeSlide 0.25s var(--transition-spring);
+        }
+        @keyframes fadeSlide {
+            from {
+                opacity: 0.6;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== 响应式微调 ===== */
+        @media (max-width: 380px) {
+            .tool-grid {
+                gap: 8px;
+            }
+            .tool-card {
+                padding: 14px 10px 12px;
+            }
+            .tool-card .icon {
+                font-size: 24px;
+            }
+            .tool-card .name {
+                font-size: 13px;
+            }
+        }
+
+        /* ===== QR 专用 ===== */
+        #qrCanvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            background: white;
+        }
+
+        /* ===== Diff 样式 ===== */
+        .diff-line {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin: 1px 0;
+        }
+        .diff-added {
+            background: rgba(52, 199, 89, 0.2);
+            border-left: 3px solid #34c759;
+        }
+        .diff-removed {
+            background: rgba(255, 59, 48, 0.2);
+            border-left: 3px solid #ff3b30;
+        }
+        .diff-unchanged {
+            opacity: 0.6;
+        }
+
+        /* ===== Markdown 预览 ===== */
+        .markdown-preview {
+            background: var(--bg-tool);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            border: 1px solid var(--separator);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        .markdown-preview h1,
+        .markdown-preview h2 {
+            margin: 8px 0;
+        }
+        .markdown-preview code {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .markdown-preview pre {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        /* ===== 颜色选择器 ===== */
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .color-picker-wrapper input[type="color"] {
+            width: 60px;
+            height: 60px;
+            border: none;
+            padding: 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .color-picker-wrapper .color-info {
+            flex: 1;
+        }
+
+        /* ===== 字数统计结果左对齐 ===== */
+        .word-count-result {
+            text-align: left !important;
+            white-space: pre-wrap;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+
+        <!-- ===== 顶部导航 ===== -->
+        <header class="header">
+            <span class="header-title"><i class="fas fa-toolbox"></i>万能工具</span>
+            <button class="header-action" id="resetAllBtn" aria-label="重置"><i class="fas fa-rotate-right"></i> 重置</button>
+        </header>
+
+        <!-- ===== 主内容 ===== -->
+        <div class="content" id="mainContent">
+
+            <div class="tab-panel active" data-tab="common">
+                <div class="section-title"><i class="fas fa-star" style="margin-right:6px;color:var(--text-tertiary);"></i>常用工具</div>
+                <div class="tool-grid" id="toolGridCommon"></div>
+                <div class="section-title"><i class="fas fa-bolt" style="margin-right:6px;color:var(--text-tertiary);"></i>计算与转换</div>
+                <div class="tool-grid" id="toolGridCalc"></div>
+            </div>
+
+            <div class="tab-panel" data-tab="more">
+                <div class="section-title"><i class="fas fa-code" style="margin-right:6px;color:var(--text-tertiary);"></i>开发与编码</div>
+                <div class="tool-grid" id="toolGridDev"></div>
+                <div class="section-title"><i class="fas fa-shield" style="margin-right:6px;color:var(--text-tertiary);"></i>安全与检测</div>
+                <div class="tool-grid" id="toolGridSecurity"></div>
+                <div class="section-title"><i class="fas fa-clock" style="margin-right:6px;color:var(--text-tertiary);"></i>时间与日期</div>
+                <div class="tool-grid" id="toolGridTime"></div>
+                <div class="section-title"><i class="fas fa-paint-brush" style="margin-right:6px;color:var(--text-tertiary);"></i>创意与设计</div>
+                <div class="tool-grid" id="toolGridDesign"></div>
+                <p class="text-muted text-center" style="margin-top:24px;padding:20px 0;color:var(--text-tertiary);font-size:14px;">
+                    <i class="fas fa-rocket"></i> 更多工具持续更新
+                </p>
+            </div>
+
+        </div>
+
+        <!-- ===== 底部标签栏 ===== -->
+        <nav class="tab-bar" role="tablist">
+            <button class="tab-item active" data-tab="common" role="tab">
+                <span class="tab-icon"><i class="fas fa-th-large"></i></span>
+                <span>常用</span>
+            </button>
+            <button class="tab-item" data-tab="more" role="tab">
+                <span class="tab-icon"><i class="fas fa-folder"></i></span>
+                <span>更多</span>
+            </button>
+        </nav>
+
+        <!-- ===== 遮罩 ===== -->
+        <div class="panel-overlay" id="panelOverlay"></div>
+
+        <!-- ===== 共享元素面板 ===== -->
+        <div class="shared-panel" id="sharedPanel">
+            <div class="panel-header">
+                <div class="panel-title" id="panelTitle">
+                    <i class="fas fa-cube"></i> 工具
+                </div>
+                <button class="panel-close" id="panelClose" aria-label="关闭">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+            <div class="panel-body tool-body" id="panelBody">
+                <!-- 动态渲染 -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ============================================================
+            //  工具定义 (共 28 个工具)
+            // ============================================================
+            const TOOLS = {
+
+                // ---------- 1. 计算器 ----------
+                calculator: {
+                    name: '计算器',
+                    icon: 'fa-calculator',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <div class="calc-display">
+                                <div class="expr" id="calcExpr">2+3*4</div>
+                                <div class="result" id="calcResult">14</div>
+                            </div>
+                            <div class="calc-grid">
+                                <button class="calc-clear" data-calc="clear">AC</button>
+                                <button class="calc-op" data-calc="paren">(</button>
+                                <button class="calc-op" data-calc="paren">)</button>
+                                <button class="calc-op" data-calc="op">/</button>
+                                <button data-calc="num">7</button>
+                                <button data-calc="num">8</button>
+                                <button data-calc="num">9</button>
+                                <button class="calc-op" data-calc="op">*</button>
+                                <button data-calc="num">4</button>
+                                <button data-calc="num">5</button>
+                                <button data-calc="num">6</button>
+                                <button class="calc-op" data-calc="op">-</button>
+                                <button data-calc="num">1</button>
+                                <button data-calc="num">2</button>
+                                <button data-calc="num">3</button>
+                                <button class="calc-op" data-calc="op">+</button>
+                                <button data-calc="num">0</button>
+                                <button data-calc="num">.</button>
+                                <button class="calc-op" data-calc="backspace">⌫</button>
+                                <button class="calc-eq" data-calc="equals">=</button>
+                            </div>
+                            <p class="text-muted text-center mt-8"><i class="fas fa-info-circle"></i> 支持 + - * / ( )</p>
+                        `;
+
+                        const exprEl = container.querySelector('#calcExpr');
+                        const resultEl = container.querySelector('#calcResult');
+                        let expression = '2+3*4';
+
+                        const compute = (expr) => {
+                            try {
+                                const result = Function('"use strict"; return (' + expr + ')')();
+                                if (typeof result === 'number' && !Number.isInteger(result)) {
+                                    return result.toFixed(4);
+                                }
+                                return String(result);
+                            } catch (_) {
+                                return '错误';
+                            }
+                        };
+
+                        const updateDisplay = () => {
+                            exprEl.textContent = expression || '0';
+                            if (expression) {
+                                const res = compute(expression);
+                                resultEl.textContent = res;
+                            } else {
+                                resultEl.textContent = '0';
+                            }
+                        };
+
+                        const handleInput = (val) => {
+                            if (val === 'clear') {
+                                expression = '';
+                            } else if (val === 'backspace') {
+                                expression = expression.slice(0, -1);
+                            } else if (val === 'equals') {
+                                try {
+                                    const res = compute(expression);
+                                    if (res !== '错误') {
+                                        expression = String(res);
+                                    }
+                                } catch (_) { /* ignore */ }
+                            } else if (val === 'paren') {
+                                expression += '()';
+                            } else {
+                                expression += val;
+                            }
+                            updateDisplay();
+                        };
+
+                        container.querySelectorAll('.calc-grid button').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const type = btn.dataset.calc;
+                                if (type === 'num') {
+                                    handleInput(btn.textContent.trim());
+                                } else if (type === 'op') {
+                                    handleInput(btn.textContent.trim());
+                                } else if (type === 'paren') {
+                                    handleInput('paren');
+                                } else if (type === 'clear') {
+                                    handleInput('clear');
+                                } else if (type === 'backspace') {
+                                    handleInput('backspace');
+                                } else if (type === 'equals') {
+                                    handleInput('equals');
+                                }
+                            });
+                        });
+
+                        const keyMap = {
+                            '0': '0',
+                            '1': '1',
+                            '2': '2',
+                            '3': '3',
+                            '4': '4',
+                            '5': '5',
+                            '6': '6',
+                            '7': '7',
+                            '8': '8',
+                            '9': '9',
+                            '.': '.',
+                            '+': '+',
+                            '-': '-',
+                            '*': '*',
+                            '/': '/',
+                            '(': '(',
+                            ')': ')',
+                            'Enter': 'equals',
+                            'Backspace': 'backspace',
+                            'Escape': 'clear'
+                        };
+                        const handleKey = (e) => {
+                            const key = e.key;
+                            const tag = e.target.tagName;
+                            if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) {
+                                return;
+                            }
+                            if (key in keyMap) {
+                                e.preventDefault();
+                                handleInput(keyMap[key]);
+                            }
+                        };
+                        document.addEventListener('keydown', handleKey);
+                        container._cleanup = () => {
+                            document.removeEventListener('keydown', handleKey);
+                        };
+                        updateDisplay();
+                    }
+                },
+
+                // ---------- 2. 科学计算器 ----------
+                scientific: {
+                    name: '科学计算器',
+                    icon: 'fa-superscript',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-code"></i> 表达式 (支持 sin, cos, log, sqrt 等)</label>
+                            <input type="text" id="sciInput" placeholder="例如 sin(30)+cos(60)" value="sin(30)+cos(60)" />
+                            <button class="btn-primary" id="sciBtn"><i class="fas fa-equals"></i> 计算</button>
+                            <div class="result" id="sciResult">= <span id="sciValue">1.366</span></div>
+                            <p class="text-muted text-center mt-8"><i class="fas fa-info-circle"></i> 支持 Math 对象所有函数</p>
+                        `;
+
+                        const input = container.querySelector('#sciInput');
+                        const btn = container.querySelector('#sciBtn');
+                        const output = container.querySelector('#sciValue');
+
+                        const compute = () => {
+                            let expr = input.value.trim();
+                            if (!expr) return;
+                            const replacements = {
+                                'sin': 'Math.sin',
+                                'cos': 'Math.cos',
+                                'tan': 'Math.tan',
+                                'log': 'Math.log',
+                                'ln': 'Math.log',
+                                'sqrt': 'Math.sqrt',
+                                'pow': 'Math.pow',
+                                'PI': 'Math.PI',
+                                'E': 'Math.E',
+                                'abs': 'Math.abs',
+                                'floor': 'Math.floor',
+                                'ceil': 'Math.ceil',
+                                'round': 'Math.round',
+                                'random': 'Math.random'
+                            };
+                            let processed = expr;
+                            for (const [key, val] of Object.entries(replacements)) {
+                                const regex = new RegExp('\\b' + key + '\\b', 'g');
+                                processed = processed.replace(regex, val);
+                            }
+                            try {
+                                const result = Function('"use strict"; return (' + processed + ')')();
+                                if (typeof result === 'number' && !Number.isInteger(result)) {
+                                    output.textContent = result.toFixed(6);
+                                } else {
+                                    output.textContent = String(result);
+                                }
+                            } catch (_) {
+                                output.textContent = '⚠️ 表达式错误';
+                            }
+                        };
+
+                        btn.addEventListener('click', compute);
+                        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') compute(); });
+                        compute();
+                    }
+                },
+
+                // ---------- 3. 进制转换 ----------
+                baseConvert: {
+                    name: '进制转换',
+                    icon: 'fa-code-branch',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-hashtag"></i> 输入数字</label>
+                            <input type="text" id="baseInput" placeholder="输入数字" value="255" />
+                            <div class="row">
+                                <div>
+                                    <label>从</label>
+                                    <select id="baseFrom">
+                                        <option value="2">二进制</option>
+                                        <option value="8">八进制</option>
+                                        <option value="10" selected>十进制</option>
+                                        <option value="16">十六进制</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>到</label>
+                                    <select id="baseTo">
+                                        <option value="2">二进制</option>
+                                        <option value="8">八进制</option>
+                                        <option value="10">十进制</option>
+                                        <option value="16" selected>十六进制</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="btn-primary" id="baseBtn"><i class="fas fa-arrows-left-right"></i> 转换</button>
+                            <div class="result" id="baseResult">结果</div>
+                        `;
+
+                        const input = container.querySelector('#baseInput');
+                        const from = container.querySelector('#baseFrom');
+                        const to = container.querySelector('#baseTo');
+                        const btn = container.querySelector('#baseBtn');
+                        const result = container.querySelector('#baseResult');
+
+                        const convert = () => {
+                            const val = input.value.trim();
+                            if (!val) { result.textContent = '请输入数字'; return; }
+                            const fromBase = parseInt(from.value);
+                            const toBase = parseInt(to.value);
+                            try {
+                                const decimal = parseInt(val, fromBase);
+                                if (isNaN(decimal)) { result.textContent = '无效数字'; return; }
+                                const output = decimal.toString(toBase);
+                                const label = toBase === 2 ? '二进制' :
+                                    toBase === 8 ? '八进制' :
+                                    toBase === 10 ? '十进制' : '十六进制';
+                                result.innerHTML = `${val} (${fromBase}进制) = ${output} (${label})`;
+                            } catch (_) {
+                                result.textContent = '转换失败';
+                            }
+                        };
+
+                        btn.addEventListener('click', convert);
+                        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') convert(); });
+                        convert();
+                    }
+                },
+
+                // ---------- 4. JSON 格式化 ----------
+                jsonFormat: {
+                    name: 'JSON 格式化',
+                    icon: 'fa-code',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-code"></i> 输入 JSON</label>
+                            <textarea id="jsonInput" rows="4">{"name":"张三","age":30,"city":"北京"}</textarea>
+                            <div class="row">
+                                <button class="btn-primary" id="jsonFormatBtn" style="flex:1;"><i class="fas fa-magic"></i> 格式化</button>
+                                <button class="btn-primary" id="jsonMinifyBtn" style="flex:1;background:#5856d6;"><i class="fas fa-compress"></i> 压缩</button>
+                            </div>
+                            <div class="result" id="jsonResult" style="font-size:14px;text-align:left;white-space:pre-wrap;">结果</div>
+                        `;
+
+                        const input = container.querySelector('#jsonInput');
+                        const formatBtn = container.querySelector('#jsonFormatBtn');
+                        const minifyBtn = container.querySelector('#jsonMinifyBtn');
+                        const result = container.querySelector('#jsonResult');
+
+                        const process = (minify) => {
+                            try {
+                                const obj = JSON.parse(input.value);
+                                const output = minify ? JSON.stringify(obj) : JSON.stringify(obj, null, 2);
+                                result.textContent = output;
+                            } catch (e) {
+                                result.textContent = '⚠️ 无效 JSON: ' + e.message;
+                            }
+                        };
+
+                        formatBtn.addEventListener('click', () => process(false));
+                        minifyBtn.addEventListener('click', () => process(true));
+                        process(false);
+                    }
+                },
+
+                // ---------- 5. UUID 生成 ----------
+                uuid: {
+                    name: 'UUID 生成',
+                    icon: 'fa-fingerprint',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-key"></i> 生成 UUID</label>
+                            <button class="btn-primary" id="uuidBtn"><i class="fas fa-dice"></i> 生成</button>
+                            <div class="result" id="uuidResult" style="font-size:14px;">点击生成</div>
+                            <p class="text-muted text-center mt-8"><i class="fas fa-info-circle"></i> 符合 RFC 4122 v4</p>
+                        `;
+
+                        const btn = container.querySelector('#uuidBtn');
+                        const result = container.querySelector('#uuidResult');
+
+                        const generate = () => {
+                            const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                                const r = Math.random() * 16 | 0;
+                                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                                return v.toString(16);
+                            });
+                            result.textContent = uuid;
+                        };
+
+                        btn.addEventListener('click', generate);
+                        generate();
+                    }
+                },
+
+                // ---------- 6. 密码强度检测 ----------
+                passwordStrength: {
+                    name: '密码强度检测',
+                    icon: 'fa-shield-alt',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-lock"></i> 输入密码</label>
+                            <input type="text" id="pwdInput" placeholder="输入密码" value="Passw0rd!" />
+                            <button class="btn-primary" id="pwdBtn"><i class="fas fa-check"></i> 检测强度</button>
+                            <div class="result" id="pwdResult">强度: <span id="pwdStrength">强</span></div>
+                            <div class="result" id="pwdDetail" style="font-size:14px;text-align:left;white-space:pre-wrap;"></div>
+                        `;
+
+                        const input = container.querySelector('#pwdInput');
+                        const btn = container.querySelector('#pwdBtn');
+                        const strength = container.querySelector('#pwdStrength');
+                        const detail = container.querySelector('#pwdDetail');
+
+                        const check = () => {
+                            const pwd = input.value;
+                            let score = 0;
+                            let feedback = [];
+                            if (pwd.length >= 8) { score++;
+                                feedback.push('✓ 长度≥8'); } else { feedback.push('✗ 长度＜8'); }
+                            if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) { score++;
+                                feedback.push('✓ 含大小写字母'); } else { feedback.push('✗ 缺少大小写'); }
+                            if (/\d/.test(pwd)) { score++;
+                                feedback.push('✓ 含数字'); } else { feedback.push('✗ 缺少数字'); }
+                            if (/[^a-zA-Z0-9]/.test(pwd)) { score++;
+                                feedback.push('✓ 含特殊字符'); } else { feedback.push('✗ 缺少特殊字符'); }
+
+                            let level = '弱';
+                            let color = '#ff3b30';
+                            if (score >= 4) { level = '强';
+                                color = '#34c759'; } else if (score >= 3) { level = '中';
+                                color = '#ff9500'; }
+                            strength.textContent = level;
+                            strength.style.color = color;
+                            detail.innerHTML = feedback.join('\n');
+                        };
+
+                        btn.addEventListener('click', check);
+                        input.addEventListener('input', check);
+                        check();
+                    }
+                },
+
+                // ---------- 7. URL 编解码 ----------
+                urlEncode: {
+                    name: 'URL 编解码',
+                    icon: 'fa-link',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-pen"></i> 输入文本</label>
+                            <input type="text" id="urlInput" value="Hello World! 你好" />
+                            <div class="row">
+                                <button class="btn-primary" id="urlEncodeBtn" style="flex:1;"><i class="fas fa-lock"></i> 编码</button>
+                                <button class="btn-primary" id="urlDecodeBtn" style="flex:1;background:#5856d6;"><i class="fas fa-unlock"></i> 解码</button>
+                            </div>
+                            <div class="result" id="urlResult" style="font-size:14px;">结果</div>
+                        `;
+
+                        const input = container.querySelector('#urlInput');
+                        const encodeBtn = container.querySelector('#urlEncodeBtn');
+                        const decodeBtn = container.querySelector('#urlDecodeBtn');
+                        const result = container.querySelector('#urlResult');
+
+                        encodeBtn.addEventListener('click', () => {
+                            try { result.textContent = encodeURIComponent(input.value); } catch (e) { result
+                                    .textContent = '⚠️ 编码失败'; }
+                        });
+                        decodeBtn.addEventListener('click', () => {
+                            try { result.textContent = decodeURIComponent(input.value); } catch (e) { result
+                                    .textContent = '⚠️ 解码失败'; }
+                        });
+                    }
+                },
+
+                // ---------- 8. Base64 编解码 ----------
+                base64: {
+                    name: 'Base64 编解码',
+                    icon: 'fa-file-code',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-pen"></i> 输入文本</label>
+                            <textarea id="base64Input" rows="3">Hello World</textarea>
+                            <div class="row">
+                                <button class="btn-primary" id="base64EncodeBtn" style="flex:1;"><i class="fas fa-lock"></i> 编码</button>
+                                <button class="btn-primary" id="base64DecodeBtn" style="flex:1;background:#5856d6;"><i class="fas fa-unlock"></i> 解码</button>
+                            </div>
+                            <div class="result" id="base64Result" style="font-size:14px;">结果</div>
+                        `;
+
+                        const input = container.querySelector('#base64Input');
+                        const encodeBtn = container.querySelector('#base64EncodeBtn');
+                        const decodeBtn = container.querySelector('#base64DecodeBtn');
+                        const result = container.querySelector('#base64Result');
+
+                        encodeBtn.addEventListener('click', () => {
+                            try { result.textContent = btoa(unescape(encodeURIComponent(input.value))); } catch (
+                                e) { result.textContent = '⚠️ 编码失败'; }
+                        });
+                        decodeBtn.addEventListener('click', () => {
+                            try { result.textContent = decodeURIComponent(escape(atob(input.value))); } catch (
+                                e) { result.textContent = '⚠️ 解码失败'; }
+                        });
+                    }
+                },
+
+                // ---------- 9. 时间戳转换 ----------
+                timestamp: {
+                    name: '时间戳转换',
+                    icon: 'fa-clock',
+                    render: (container) => {
+                        const now = Math.floor(Date.now() / 1000);
+                        container.innerHTML = `
+                            <label><i class="fas fa-clock"></i> Unix 时间戳 (秒)</label>
+                            <input type="number" id="tsInput" value="${now}" />
+                            <button class="btn-primary" id="tsToDate"><i class="fas fa-arrow-right"></i> 转日期</button>
+                            <div class="result" id="tsResult">${new Date(now*1000).toLocaleString()}</div>
+                            <hr style="border:1px solid var(--separator);margin:16px 0;" />
+                            <label><i class="fas fa-calendar"></i> 日期时间</label>
+                            <input type="datetime-local" id="tsDateInput" />
+                            <button class="btn-primary" id="dateToTs"><i class="fas fa-arrow-right"></i> 转时间戳</button>
+                            <div class="result" id="tsResult2">点击转换</div>
+                        `;
+
+                        const tsInput = container.querySelector('#tsInput');
+                        const tsToDateBtn = container.querySelector('#tsToDate');
+                        const tsResult = container.querySelector('#tsResult');
+                        const dateInput = container.querySelector('#tsDateInput');
+                        const dateToTsBtn = container.querySelector('#dateToTs');
+                        const tsResult2 = container.querySelector('#tsResult2');
+
+                        const nowDate = new Date();
+                        dateInput.value = nowDate.toISOString().slice(0, 16);
+
+                        tsToDateBtn.addEventListener('click', () => {
+                            const ts = parseInt(tsInput.value);
+                            if (isNaN(ts)) { tsResult.textContent = '无效时间戳'; return; }
+                            const d = new Date(ts * 1000);
+                            tsResult.textContent = d.toLocaleString();
+                        });
+
+                        dateToTsBtn.addEventListener('click', () => {
+                            const d = new Date(dateInput.value);
+                            if (isNaN(d)) { tsResult2.textContent = '无效日期'; return; }
+                            const ts = Math.floor(d.getTime() / 1000);
+                            tsResult2.textContent = ts + ' (秒)';
+                        });
+
+                        tsToDateBtn.click();
+                    }
+                },
+
+                // ---------- 10. 计时器 ----------
+                timer: {
+                    name: '计时器',
+                    icon: 'fa-clock',
+                    render: (container) => {
+                        let seconds = 0;
+                        let interval = null;
+                        let running = false;
+
+                        const updateDisplay = (disp) => {
+                            const m = String(Math.floor(disp / 60)).padStart(2, '0');
+                            const s = String(Math.floor(disp % 60)).padStart(2, '0');
+                            const cs = String(Math.floor((disp % 1) * 100)).padStart(2, '0');
+                            return `${m}:${s}.${cs}`;
+                        };
+
+                        container.innerHTML = `
+                            <div class="timer-display" id="timerDisplay">00:00.00</div>
+                            <div class="timer-btns">
+                                <button class="btn-start" id="timerStart"><i class="fas fa-play"></i> 开始</button>
+                                <button class="btn-pause" id="timerPause" style="display:none;"><i class="fas fa-pause"></i> 暂停</button>
+                                <button class="btn-reset" id="timerReset"><i class="fas fa-rotate-left"></i> 重置</button>
+                            </div>
+                            <p class="text-muted text-center mt-8"><i class="fas fa-hand-pointer"></i> 点击开始，再次点击暂停</p>
+                        `;
+
+                        const display = container.querySelector('#timerDisplay');
+                        const startBtn = container.querySelector('#timerStart');
+                        const pauseBtn = container.querySelector('#timerPause');
+                        const resetBtn = container.querySelector('#timerReset');
+
+                        const render = () => { display.textContent = updateDisplay(seconds); };
+
+                        const stopTimer = () => {
+                            if (interval) { clearInterval(interval);
+                                interval = null; }
+                            running = false;
+                            startBtn.style.display = '';
+                            pauseBtn.style.display = 'none';
+                        };
+
+                        const startTimer = () => {
+                            if (running) return;
+                            running = true;
+                            startBtn.style.display = 'none';
+                            pauseBtn.style.display = '';
+                            const startTime = performance.now() - seconds * 1000;
+                            interval = setInterval(() => {
+                                const now = performance.now();
+                                seconds = (now - startTime) / 1000;
+                                if (seconds < 0) seconds = 0;
+                                render();
+                            }, 30);
+                        };
+
+                        startBtn.addEventListener('click', startTimer);
+                        pauseBtn.addEventListener('click', () => {
+                            if (interval) { clearInterval(interval);
+                                interval = null; }
+                            running = false;
+                            startBtn.style.display = '';
+                            pauseBtn.style.display = 'none';
+                        });
+                        resetBtn.addEventListener('click', () => {
+                            stopTimer();
+                            seconds = 0;
+                            render();
+                        });
+                        render();
+                    }
+                },
+
+                // ---------- 11. 单位换算 ----------
+                unit: {
+                    name: '单位换算',
+                    icon: 'fa-ruler-combined',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-tag"></i> 类别</label>
+                            <select id="unitCategory">
+                                <option value="length">长度</option>
+                                <option value="weight">重量</option>
+                                <option value="temp">温度</option>
+                                <option value="area">面积</option>
+                                <option value="volume">体积</option>
+                            </select>
+                            <div class="row">
+                                <div>
+                                    <label>从</label>
+                                    <select id="unitFrom"></select>
+                                </div>
+                                <div>
+                                    <label>到</label>
+                                    <select id="unitTo"></select>
+                                </div>
+                            </div>
+                            <label><i class="fas fa-hashtag"></i> 数值</label>
+                            <input type="number" id="unitValue" value="1" step="any">
+                            <button class="btn-primary" id="unitBtn"><i class="fas fa-arrows-left-right"></i> 换算</button>
+                            <div class="result" id="unitResult">结果</div>
+                        `;
+
+                        const units = {
+                            length: { m: 1, km: 1000, cm: 0.01, mm: 0.001, mi: 1609.344, ft: 0.3048, in: 0.0254 },
+                            weight: { kg: 1, g: 0.001, mg: 0.000001, lb: 0.453592, oz: 0.0283495 },
+                            temp: { C: 'C', F: 'F', K: 'K' },
+                            area: { m2: 1, km2: 1e6, cm2: 0.0001, mm2: 1e-6, ha: 10000, acre: 4046.86 },
+                            volume: { m3: 1, L: 0.001, mL: 1e-6, gal: 0.00378541, ft3: 0.0283168 }
+                        };
+
+                        const unitNames = {
+                            length: { m: '米', km: '千米', cm: '厘米', mm: '毫米', mi: '英里', ft: '英尺', in: '英寸' },
+                            weight: { kg: '千克', g: '克', mg: '毫克', lb: '磅', oz: '盎司' },
+                            temp: { C: '°C', F: '°F', K: 'K' },
+                            area: { m2: '平方米', km2: '平方公里', cm2: '平方厘米', mm2: '平方毫米', ha: '公顷', acre: '英亩' },
+                            volume: { m3: '立方米', L: '升', mL: '毫升', gal: '加仑', ft3: '立方英尺' }
+                        };
+
+                        const catSelect = container.querySelector('#unitCategory');
+                        const fromSelect = container.querySelector('#unitFrom');
+                        const toSelect = container.querySelector('#unitTo');
+                        const valueInput = container.querySelector('#unitValue');
+                        const btn = container.querySelector('#unitBtn');
+                        const result = container.querySelector('#unitResult');
+
+                        const populate = () => {
+                            const cat = catSelect.value;
+                            const keys = Object.keys(units[cat]);
+                            fromSelect.innerHTML = keys.map(k =>
+                                `<option value="${k}">${unitNames[cat][k]}</option>`).join('');
+                            toSelect.innerHTML = keys.map(k =>
+                                `<option value="${k}">${unitNames[cat][k]}</option>`).join('');
+                            if (keys.length > 1) { toSelect.value = keys[1]; }
+                        };
+
+                        const convert = () => {
+                            const cat = catSelect.value;
+                            const from = fromSelect.value;
+                            const to = toSelect.value;
+                            const val = parseFloat(valueInput.value) || 0;
+
+                            if (cat === 'temp') {
+                                let kelvin;
+                                if (from === 'C') kelvin = val + 273.15;
+                                else if (from === 'F') kelvin = (val - 32) * 5 / 9 + 273.15;
+                                else kelvin = val;
+                                let out;
+                                if (to === 'C') out = kelvin - 273.15;
+                                else if (to === 'F') out = (kelvin - 273.15) * 9 / 5 + 32;
+                                else out = kelvin;
+                                result.innerHTML =
+                                `${val} ${unitNames[cat][from]} = ${out.toFixed(2)} ${unitNames[cat][to]}`;
+                                return;
+                            }
+
+                            const base = val * units[cat][from];
+                            const out = base / units[cat][to];
+                            result.innerHTML =
+                                `${val} ${unitNames[cat][from]} = ${out.toFixed(4)} ${unitNames[cat][to]}`;
+                        };
+
+                        catSelect.addEventListener('change', () => { populate();
+                            convert(); });
+                        fromSelect.addEventListener('change', convert);
+                        toSelect.addEventListener('change', convert);
+                        btn.addEventListener('click', convert);
+                        valueInput.addEventListener('input', convert);
+                        valueInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') convert(); });
+
+                        populate();
+                        convert();
+                    }
+                },
+
+                // ---------- 12. 汇率 ----------
+                currency: {
+                    name: '汇率换算',
+                    icon: 'fa-coins',
+                    render: (container) => {
+                        const rates = { USD: 1, EUR: 0.92, GBP: 0.79, JPY: 149.5, CNY: 7.24 };
+                        container.innerHTML = `
+                            <label><i class="fas fa-coins"></i> 金额</label>
+                            <input type="number" id="curAmount" value="100" step="any">
+                            <div class="row">
+                                <div>
+                                    <label>从</label>
+                                    <select id="curFrom">
+                                        ${Object.keys(rates).map(c => `<option value="${c}">${c}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>到</label>
+                                    <select id="curTo">
+                                        ${Object.keys(rates).map(c => `<option value="${c}">${c}</option>`).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="btn-primary" id="curBtn"><i class="fas fa-arrow-right-arrow-left"></i> 换算</button>
+                            <div class="result" id="curResult">结果</div>
+                            <p class="text-muted text-center mt-8"><i class="fas fa-info-circle"></i> 演示汇率，仅供参考</p>
+                        `;
+
+                        const from = container.querySelector('#curFrom');
+                        const to = container.querySelector('#curTo');
+                        const amount = container.querySelector('#curAmount');
+                        const btn = container.querySelector('#curBtn');
+                        const result = container.querySelector('#curResult');
+
+                        const convert = () => {
+                            const val = parseFloat(amount.value) || 0;
+                            const base = val / rates[from.value];
+                            const out = base * rates[to.value];
+                            result.innerHTML = `${val} ${from.value} = ${out.toFixed(2)} ${to.value}`;
+                        };
+
+                        from.addEventListener('change', convert);
+                        to.addEventListener('change', convert);
+                        btn.addEventListener('click', convert);
+                        amount.addEventListener('input', convert);
+                        amount.addEventListener('keydown', (e) => { if (e.key === 'Enter') convert(); });
+                        convert();
+                    }
+                },
+
+                // ---------- 13. 颜色转换 ----------
+                color: {
+                    name: '颜色转换',
+                    icon: 'fa-palette',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-pen"></i> 输入颜色</label>
+                            <input type="text" id="colorInput" placeholder="#ff6600 或 rgb(255,102,0)" value="#ff6600">
+                            <button class="btn-primary" id="colorBtn"><i class="fas fa-sync"></i> 转换</button>
+                            <div class="result" id="colorResult">
+                                <span id="colorPreview" style="display:inline-block;width:40px;height:40px;border-radius:8px;background:#ff6600;vertical-align:middle;margin-right:12px;"></span>
+                                <span id="colorText">HEX: #ff6600<br>RGB: rgb(255,102,0)</span>
+                            </div>
+                        `;
+
+                        const input = container.querySelector('#colorInput');
+                        const btn = container.querySelector('#colorBtn');
+                        const preview = container.querySelector('#colorPreview');
+                        const text = container.querySelector('#colorText');
+
+                        const convert = () => {
+                            let str = input.value.trim();
+                            let r, g, b;
+                            const hexMatch = str.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+                            if (hexMatch) {
+                                r = parseInt(hexMatch[1], 16);
+                                g = parseInt(hexMatch[2], 16);
+                                b = parseInt(hexMatch[3], 16);
+                            } else {
+                                const rgbMatch = str.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+                                if (rgbMatch) {
+                                    r = parseInt(rgbMatch[1]);
+                                    g = parseInt(rgbMatch[2]);
+                                    b = parseInt(rgbMatch[3]);
+                                } else {
+                                    text.textContent = '⚠️ 无法解析，请使用 #rrggbb 或 rgb(r,g,b)';
+                                    preview.style.background = '#ccc';
+                                    return;
+                                }
+                            }
+                            const hex = '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
+                            const hsl = rgbToHsl(r, g, b);
+                            preview.style.background = hex;
+                            text.innerHTML =
+                                `HEX: ${hex}<br>RGB: rgb(${r},${g},${b})<br>HSL: hsl(${hsl[0].toFixed(0)},${hsl[1].toFixed(0)}%,${hsl[2].toFixed(0)}%)`;
+                        };
+
+                        function rgbToHsl(r, g, b) {
+                            r /= 255;
+                            g /= 255;
+                            b /= 255;
+                            const max = Math.max(r, g, b),
+                                min = Math.min(r, g, b);
+                            let h, s, l = (max + min) / 2;
+                            if (max === min) { h = s = 0; } else {
+                                const d = max - min;
+                                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                                if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+                                else if (max === g) h = ((b - r) / d + 2) / 6;
+                                else h = ((r - g) / d + 4) / 6;
+                            }
+                            return [h * 360, s * 100, l * 100];
+                        }
+
+                        btn.addEventListener('click', convert);
+                        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') convert(); });
+                        convert();
+                    }
+                },
+
+                // ---------- 14. 二维码 ----------
+                qr: {
+                    name: '二维码',
+                    icon: 'fa-qrcode',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-link"></i> 文本内容</label>
+                            <input type="text" id="qrInput" placeholder="输入文本或链接" value="https://github.com">
+                            <button class="btn-primary" id="qrBtn"><i class="fas fa-qrcode"></i> 生成二维码</button>
+                            <div class="result" id="qrResult" style="min-height:120px;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                                <canvas id="qrCanvas" width="200" height="200"></canvas>
+                                <span class="text-muted" style="margin-top:8px;"><i class="fas fa-camera"></i> 扫码访问</span>
+                            </div>
+                        `;
+
+                        const input = container.querySelector('#qrInput');
+                        const btn = container.querySelector('#qrBtn');
+                        const canvas = container.querySelector('#qrCanvas');
+
+                        const generate = () => {
+                            const text = input.value.trim() || 'https://github.com';
+                            const url =
+                                `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}`;
+                            const img = new Image();
+                            img.crossOrigin = 'anonymous';
+                            img.onload = () => {
+                                const ctx = canvas.getContext('2d');
+                                canvas.width = 200;
+                                canvas.height = 200;
+                                ctx.clearRect(0, 0, 200, 200);
+                                ctx.drawImage(img, 0, 0, 200, 200);
+                            };
+                            img.onerror = () => {
+                                const ctx = canvas.getContext('2d');
+                                canvas.width = 200;
+                                canvas.height = 200;
+                                ctx.clearRect(0, 0, 200, 200);
+                                ctx.fillStyle = '#f0f0f0';
+                                ctx.fillRect(0, 0, 200, 200);
+                                ctx.fillStyle = '#333';
+                                ctx.font = '16px Inter, sans-serif';
+                                ctx.textAlign = 'center';
+                                ctx.fillText('⚠️ 加载失败', 100, 100);
+                            };
+                            img.src = url;
+                        };
+
+                        btn.addEventListener('click', generate);
+                        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') generate(); });
+                        generate();
+                    }
+                },
+
+                // ---------- 15. BMI ----------
+                bmi: {
+                    name: 'BMI 计算',
+                    icon: 'fa-weight-scale',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-ruler-vertical"></i> 身高 (cm)</label>
+                            <input type="number" id="bmiHeight" value="175" step="0.1">
+                            <label><i class="fas fa-weight-hanging"></i> 体重 (kg)</label>
+                            <input type="number" id="bmiWeight" value="70" step="0.1">
+                            <button class="btn-primary" id="bmiBtn"><i class="fas fa-calculator"></i> 计算 BMI</button>
+                            <div class="result" id="bmiResult">
+                                BMI = <span id="bmiValue">22.9</span>
+                                <small id="bmiCategory">正常范围</small>
+                            </div>
+                        `;
+
+                        const height = container.querySelector('#bmiHeight');
+                        const weight = container.querySelector('#bmiWeight');
+                        const btn = container.querySelector('#bmiBtn');
+                        const valueEl = container.querySelector('#bmiValue');
+                        const catEl = container.querySelector('#bmiCategory');
+
+                        const compute = () => {
+                            const h = parseFloat(height.value) / 100;
+                            const w = parseFloat(weight.value);
+                            if (!h || !w || h <= 0 || w <= 0) {
+                                valueEl.textContent = '—';
+                                catEl.textContent = '请输入有效数值';
+                                return;
+                            }
+                            const bmi = w / (h * h);
+                            valueEl.textContent = bmi.toFixed(1);
+                            if (bmi < 18.5) catEl.textContent = '偏瘦';
+                            else if (bmi < 24) catEl.textContent = '正常 ✅';
+                            else if (bmi < 28) catEl.textContent = '超重';
+                            else catEl.textContent = '肥胖 ⚠️';
+                        };
+
+                        btn.addEventListener('click', compute);
+                        height.addEventListener('input', compute);
+                        weight.addEventListener('input', compute);
+                        compute();
+                    }
+                },
+
+                // ---------- 16. 随机工具 ----------
+                random: {
+                    name: '随机工具',
+                    icon: 'fa-dice',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-arrow-down"></i> 最小值</label>
+                            <input type="number" id="randMin" value="1">
+                            <label><i class="fas fa-arrow-up"></i> 最大值</label>
+                            <input type="number" id="randMax" value="100">
+                            <button class="btn-primary" id="randBtn"><i class="fas fa-dice"></i> 生成随机数</button>
+                            <div class="result" id="randResult">点击生成</div>
+                            <button class="btn-primary" id="randPwdBtn" style="background:#5856d6;"><i class="fas fa-key"></i> 生成密码 (12位)</button>
+                            <div class="result" id="randPwdResult" style="font-size:14px;">点击生成</div>
+                            <button class="btn-primary" id="randColorBtn" style="background:#ff9500;"><i class="fas fa-palette"></i> 随机颜色</button>
+                            <div class="result" id="randColorResult" style="font-size:14px;">点击生成</div>
+                        `;
+
+                        const minIn = container.querySelector('#randMin');
+                        const maxIn = container.querySelector('#randMax');
+                        const btn = container.querySelector('#randBtn');
+                        const result = container.querySelector('#randResult');
+                        const pwdBtn = container.querySelector('#randPwdBtn');
+                        const pwdResult = container.querySelector('#randPwdResult');
+                        const colorBtn = container.querySelector('#randColorBtn');
+                        const colorResult = container.querySelector('#randColorResult');
+
+                        btn.addEventListener('click', () => {
+                            const min = parseInt(minIn.value) || 0;
+                            const max = parseInt(maxIn.value) || 100;
+                            if (min >= max) { result.textContent = '⚠️ 最小值需小于最大值'; return; }
+                            const v = Math.floor(Math.random() * (max - min + 1)) + min;
+                            result.textContent = `🎯 ${v}`;
+                        });
+
+                        pwdBtn.addEventListener('click', () => {
+                            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+                            let pwd = '';
+                            for (let i = 0; i < 12; i++) {
+                                pwd += chars[Math.floor(Math.random() * chars.length)];
+                            }
+                            pwdResult.textContent = `🔑 ${pwd}`;
+                        });
+
+                        colorBtn.addEventListener('click', () => {
+                            const r = Math.floor(Math.random() * 256);
+                            const g = Math.floor(Math.random() * 256);
+                            const b = Math.floor(Math.random() * 256);
+                            const hex = '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
+                            colorResult.innerHTML =
+                                `<span style="display:inline-block;width:20px;height:20px;background:${hex};border-radius:4px;vertical-align:middle;margin-right:8px;"></span> ${hex}`;
+                        });
+                    }
+                },
+
+                // ---------- 17. 文本工具 ----------
+                text: {
+                    name: '文本工具',
+                    icon: 'fa-pen-to-square',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-font"></i> 输入文本</label>
+                            <textarea id="textInput" rows="3">Hello World</textarea>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+                                <button class="btn-primary" id="textCount" style="flex:1;padding:10px;"><i class="fas fa-list"></i> 统计</button>
+                                <button class="btn-primary" id="textReverse" style="flex:1;padding:10px;background:#5856d6;"><i class="fas fa-arrow-right-arrow-left"></i> 反转</button>
+                                <button class="btn-primary" id="textUpper" style="flex:1;padding:10px;background:#34c759;"><i class="fas fa-arrow-up"></i> 大写</button>
+                                <button class="btn-primary" id="textLower" style="flex:1;padding:10px;background:#ff9500;"><i class="fas fa-arrow-down"></i> 小写</button>
+                                <button class="btn-primary" id="textEncode" style="flex:1;padding:10px;background:#007aff;"><i class="fas fa-lock"></i> Base64编码</button>
+                                <button class="btn-primary" id="textDecode" style="flex:1;padding:10px;background:#af52de;"><i class="fas fa-unlock"></i> Base64解码</button>
+                            </div>
+                            <div class="result" id="textResult" style="font-size:15px;">结果</div>
+                        `;
+
+                        const input = container.querySelector('#textInput');
+                        const result = container.querySelector('#textResult');
+                        const actions = {
+                            count: () => {
+                                const t = input.value;
+                                result.innerHTML =
+                                    `📊 字符: ${t.length} | 单词: ${t.trim()?t.trim().split(/\s+/).length:0} | 行: ${t.split('\n').length}`;
+                            },
+                            reverse: () => { result.textContent = input.value.split('').reverse().join(''); },
+                            upper: () => { result.textContent = input.value.toUpperCase(); },
+                            lower: () => { result.textContent = input.value.toLowerCase(); },
+                            encode: () => {
+                                try { result.textContent = btoa(unescape(encodeURIComponent(input.value))); } catch (
+                                _) { result.textContent = '⚠️ 编码失败'; }
+                            },
+                            decode: () => {
+                                try { result.textContent = decodeURIComponent(escape(atob(input.value))); } catch (
+                                _) { result.textContent = '⚠️ 解码失败'; }
+                            }
+                        };
+
+                        container.querySelector('#textCount').addEventListener('click', actions.count);
+                        container.querySelector('#textReverse').addEventListener('click', actions.reverse);
+                        container.querySelector('#textUpper').addEventListener('click', actions.upper);
+                        container.querySelector('#textLower').addEventListener('click', actions.lower);
+                        container.querySelector('#textEncode').addEventListener('click', actions.encode);
+                        container.querySelector('#textDecode').addEventListener('click', actions.decode);
+                        actions.count();
+                    }
+                },
+
+                // ---------- 18. 日期计算 ----------
+                date: {
+                    name: '日期计算',
+                    icon: 'fa-calendar-days',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-play"></i> 开始日期</label>
+                            <input type="date" id="dateStart">
+                            <label><i class="fas fa-stop"></i> 结束日期</label>
+                            <input type="date" id="dateEnd">
+                            <button class="btn-primary" id="dateBtn"><i class="fas fa-calculator"></i> 计算间隔</button>
+                            <div class="result" id="dateResult">选择日期</div>
+                            <button class="btn-primary" id="dateAddBtn" style="background:#5856d6;"><i class="fas fa-plus"></i> 推算日期 (+7天)</button>
+                            <div class="result" id="dateAddResult">点击推算</div>
+                        `;
+
+                        const start = container.querySelector('#dateStart');
+                        const end = container.querySelector('#dateEnd');
+                        const btn = container.querySelector('#dateBtn');
+                        const result = container.querySelector('#dateResult');
+                        const addBtn = container.querySelector('#dateAddBtn');
+                        const addResult = container.querySelector('#dateAddResult');
+
+                        const today = new Date().toISOString().split('T')[0];
+                        start.value = today;
+                        const future = new Date();
+                        future.setDate(future.getDate() + 7);
+                        end.value = future.toISOString().split('T')[0];
+
+                        btn.addEventListener('click', () => {
+                            const d1 = new Date(start.value);
+                            const d2 = new Date(end.value);
+                            if (isNaN(d1) || isNaN(d2)) { result.textContent = '⚠️ 请选择有效日期'; return; }
+                            const diff = Math.abs(d2 - d1);
+                            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                            result.textContent = `📅 相差 ${days} 天`;
+                        });
+
+                        addBtn.addEventListener('click', () => {
+                            const d = new Date(start.value);
+                            if (isNaN(d)) { addResult.textContent = '⚠️ 请先选择开始日期'; return; }
+                            d.setDate(d.getDate() + 7);
+                            addResult.textContent = `📅 +7天: ${d.toISOString().split('T')[0]}`;
+                        });
+                    }
+                },
+
+                // ---------- 19. 年龄计算 ----------
+                age: {
+                    name: '年龄计算',
+                    icon: 'fa-cake-candles',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-calendar"></i> 出生日期</label>
+                            <input type="date" id="ageBirth">
+                            <button class="btn-primary" id="ageBtn"><i class="fas fa-calculator"></i> 计算年龄</button>
+                            <div class="result" id="ageResult">选择日期</div>
+                        `;
+
+                        const birth = container.querySelector('#ageBirth');
+                        const btn = container.querySelector('#ageBtn');
+                        const result = container.querySelector('#ageResult');
+
+                        const today = new Date().toISOString().split('T')[0];
+                        birth.value = '2000-01-01';
+
+                        btn.addEventListener('click', () => {
+                            const d = new Date(birth.value);
+                            if (isNaN(d)) { result.textContent = '⚠️ 请选择有效日期'; return; }
+                            const now = new Date();
+                            let age = now.getFullYear() - d.getFullYear();
+                            const m = now.getMonth() - d.getMonth();
+                            if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+                            const diff = Math.abs(now - d);
+                            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                            result.innerHTML =
+                                `🎂 周岁: ${age} 岁<br>📅 天数: ${days} 天<br>⏳ 下次生日: ${d.getFullYear()+age+1}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                        });
+                    }
+                },
+
+                // ---------- 20. 房贷计算 ----------
+                mortgage: {
+                    name: '房贷计算',
+                    icon: 'fa-house-chimney',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-dollar-sign"></i> 贷款总额 (万元)</label>
+                            <input type="number" id="mortgageAmount" value="100" step="1">
+                            <label><i class="fas fa-percent"></i> 年利率 (%)</label>
+                            <input type="number" id="mortgageRate" value="4.9" step="0.01">
+                            <label><i class="fas fa-clock"></i> 贷款期限 (年)</label>
+                            <input type="number" id="mortgageYears" value="30" step="1">
+                            <button class="btn-primary" id="mortgageBtn"><i class="fas fa-calculator"></i> 计算月供</button>
+                            <div class="result" id="mortgageResult">结果</div>
+                        `;
+
+                        const amount = container.querySelector('#mortgageAmount');
+                        const rate = container.querySelector('#mortgageRate');
+                        const years = container.querySelector('#mortgageYears');
+                        const btn = container.querySelector('#mortgageBtn');
+                        const result = container.querySelector('#mortgageResult');
+
+                        const compute = () => {
+                            const principal = parseFloat(amount.value) * 10000;
+                            const annualRate = parseFloat(rate.value) / 100;
+                            const months = parseFloat(years.value) * 12;
+                            if (!principal || !annualRate || !months || principal <= 0 || months <= 0) {
+                                result.textContent = '⚠️ 请输入有效数值';
+                                return;
+                            }
+                            const monthlyRate = annualRate / 12;
+                            const payment = principal * monthlyRate * Math.pow(1 + monthlyRate, months) /
+                                (Math.pow(1 + monthlyRate, months) - 1);
+                            const total = payment * months;
+                            const interest = total - principal;
+                            result.innerHTML =
+                                `月供: ${payment.toFixed(2)} 元<br>总利息: ${interest.toFixed(2)} 元<br>总还款: ${total.toFixed(2)} 元`;
+                        };
+
+                        btn.addEventListener('click', compute);
+                        amount.addEventListener('input', compute);
+                        rate.addEventListener('input', compute);
+                        years.addEventListener('input', compute);
+                        compute();
+                    }
+                },
+
+                // ---------- 21. 倒计时 ----------
+                countdown: {
+                    name: '倒计时',
+                    icon: 'fa-hourglass-half',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-calendar-check"></i> 目标日期</label>
+                            <input type="datetime-local" id="countdownTarget">
+                            <button class="btn-primary" id="countdownBtn"><i class="fas fa-play"></i> 开始倒计时</button>
+                            <div class="result" id="countdownResult">设置目标时间</div>
+                        `;
+
+                        const target = container.querySelector('#countdownTarget');
+                        const btn = container.querySelector('#countdownBtn');
+                        const result = container.querySelector('#countdownResult');
+                        let interval = null;
+
+                        const update = () => {
+                            const now = new Date();
+                            const targetDate = new Date(target.value);
+                            if (isNaN(targetDate)) { result.textContent = '⚠️ 请选择有效日期'; return; }
+                            const diff = targetDate - now;
+                            if (diff <= 0) {
+                                result.textContent = '🎉 倒计时结束！';
+                                if (interval) { clearInterval(interval);
+                                    interval = null; }
+                                return;
+                            }
+                            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                            const minutes = Math.floor((diff / (1000 * 60)) % 60);
+                            const seconds = Math.floor((diff / 1000) % 60);
+                            result.innerHTML =
+                                `⏳ 剩余 ${days} 天 ${hours} 时 ${minutes} 分 ${seconds} 秒`;
+                        };
+
+                        btn.addEventListener('click', () => {
+                            if (interval) { clearInterval(interval);
+                                interval = null; }
+                            update();
+                            interval = setInterval(update, 1000);
+                        });
+
+                        const now = new Date();
+                        now.setDate(now.getDate() + 7);
+                        target.value = now.toISOString().slice(0, 16);
+                    }
+                },
+
+                // ---------- 22. 文本差异对比 ----------
+                diff: {
+                    name: '文本差异对比',
+                    icon: 'fa-code-compare',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-file-alt"></i> 原始文本</label>
+                            <textarea id="diffOld" rows="3">Hello World\nThis is line 2</textarea>
+                            <label><i class="fas fa-file-alt"></i> 新文本</label>
+                            <textarea id="diffNew" rows="3">Hello World\nThis is updated line 2\nAdded line 3</textarea>
+                            <button class="btn-primary" id="diffBtn"><i class="fas fa-arrows-left-right"></i> 对比</button>
+                            <div class="result" id="diffResult" style="font-size:14px;text-align:left;white-space:pre-wrap;font-family:monospace;">结果</div>
+                        `;
+
+                        const oldText = container.querySelector('#diffOld');
+                        const newText = container.querySelector('#diffNew');
+                        const btn = container.querySelector('#diffBtn');
+                        const result = container.querySelector('#diffResult');
+
+                        const computeDiff = () => {
+                            const oldLines = oldText.value.split('\n');
+                            const newLines = newText.value.split('\n');
+                            let output = '';
+                            const maxLen = Math.max(oldLines.length, newLines.length);
+                            for (let i = 0; i < maxLen; i++) {
+                                const oldLine = oldLines[i] || '';
+                                const newLine = newLines[i] || '';
+                                if (oldLine === newLine) {
+                                    output += `<div class="diff-unchanged">${oldLine}</div>`;
+                                } else {
+                                    if (oldLine) output += `<div class="diff-removed">- ${oldLine}</div>`;
+                                    if (newLine) output += `<div class="diff-added">+ ${newLine}</div>`;
+                                }
+                            }
+                            result.innerHTML = output || '无差异';
+                        };
+
+                        btn.addEventListener('click', computeDiff);
+                        computeDiff();
+                    }
+                },
+
+                // ---------- 23. Markdown 预览 ----------
+                markdown: {
+                    name: 'Markdown 预览',
+                    icon: 'fa-file-alt',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-pen"></i> 输入 Markdown</label>
+                            <textarea id="mdInput" rows="6"># 标题\n## 二级标题\n- 列表项1\n- 列表项2\n**粗体** *斜体*\n[链接](https://github.com)</textarea>
+                            <button class="btn-primary" id="mdBtn"><i class="fas fa-eye"></i> 预览</button>
+                            <div class="result" id="mdResult" style="text-align:left;font-size:15px;line-height:1.6;">预览</div>
+                        `;
+
+                        const input = container.querySelector('#mdInput');
+                        const btn = container.querySelector('#mdBtn');
+                        const result = container.querySelector('#mdResult');
+
+                        const renderMD = () => {
+                            const text = input.value;
+                            let html = text
+                                .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+                                .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+                                .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                                .replace(/^\- (.*$)/gm, '<li>$1</li>')
+                                .replace(/^\d\. (.*$)/gm, '<li>$1</li>')
+                                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+                                .replace(/`{3}([\s\S]*?)`{3}/g, '<pre><code>$1</code></pre>')
+                                .replace(/`(.*?)`/g, '<code>$1</code>')
+                                .replace(/\n/g, '<br>');
+                            html = html.replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>');
+                            result.innerHTML = html;
+                        };
+
+                        btn.addEventListener('click', renderMD);
+                        renderMD();
+                    }
+                },
+
+                // ---------- 24. 正则表达式测试 ----------
+                regex: {
+                    name: '正则表达式测试',
+                    icon: 'fa-search',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-pen"></i> 正则表达式</label>
+                            <input type="text" id="regexInput" placeholder="例如 \\d+" value="\\d+" />
+                            <label><i class="fas fa-font"></i> 测试文本</label>
+                            <textarea id="regexText" rows="4">123 abc 456 def</textarea>
+                            <button class="btn-primary" id="regexBtn"><i class="fas fa-play"></i> 测试</button>
+                            <div class="result" id="regexResult" style="font-size:14px;text-align:left;white-space:pre-wrap;">结果</div>
+                        `;
+
+                        const patternInput = container.querySelector('#regexInput');
+                        const textInput = container.querySelector('#regexText');
+                        const btn = container.querySelector('#regexBtn');
+                        const result = container.querySelector('#regexResult');
+
+                        const testRegex = () => {
+                            const pattern = patternInput.value;
+                            const text = textInput.value;
+                            if (!pattern) { result.textContent = '请输入正则表达式'; return; }
+                            try {
+                                const regex = new RegExp(pattern, 'g');
+                                const matches = text.match(regex);
+                                if (matches) {
+                                    result.innerHTML = `匹配到 ${matches.length} 个结果:\n${matches.join('\n')}`;
+                                } else {
+                                    result.textContent = '无匹配结果';
+                                }
+                            } catch (e) {
+                                result.textContent = '⚠️ 无效正则: ' + e.message;
+                            }
+                        };
+
+                        btn.addEventListener('click', testRegex);
+                        testRegex();
+                    }
+                },
+
+                // ---------- 25. 图片转 Base64 ----------
+                imageToBase64: {
+                    name: '图片转 Base64',
+                    icon: 'fa-image',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-upload"></i> 选择图片</label>
+                            <div class="file-input-wrapper">
+                                <span class="file-label" id="fileLabel"><i class="fas fa-cloud-upload-alt"></i> 点击选择图片</span>
+                                <input type="file" id="imageInput" accept="image/*" />
+                            </div>
+                            <button class="btn-primary" id="imageToBase64Btn"><i class="fas fa-sync"></i> 转换</button>
+                            <div class="result" id="imageBase64Result" style="font-size:12px;word-break:break-all;max-height:200px;overflow-y:auto;text-align:left;">结果</div>
+                            <p class="text-muted text-center mt-8"><i class="fas fa-info-circle"></i> 选择图片后点击转换</p>
+                        `;
+
+                        const fileInput = container.querySelector('#imageInput');
+                        const fileLabel = container.querySelector('#fileLabel');
+                        const btn = container.querySelector('#imageToBase64Btn');
+                        const result = container.querySelector('#imageBase64Result');
+
+                        fileInput.addEventListener('change', () => {
+                            if (fileInput.files.length > 0) {
+                                fileLabel.innerHTML = `<i class="fas fa-check-circle"></i> ${fileInput.files[0].name}`;
+                            } else {
+                                fileLabel.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> 点击选择图片`;
+                            }
+                        });
+
+                        btn.addEventListener('click', () => {
+                            const file = fileInput.files[0];
+                            if (!file) { result.textContent = '请先选择图片'; return; }
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                result.textContent = e.target.result;
+                                const img = new Image();
+                                img.src = e.target.result;
+                                img.style.maxWidth = '100%';
+                                img.style.maxHeight = '100px';
+                                result.prepend(img);
+                            };
+                            reader.onerror = () => { result.textContent = '读取失败'; };
+                            reader.readAsDataURL(file);
+                        });
+                    }
+                },
+
+                // ---------- 26. 颜色选择器 ----------
+                colorPicker: {
+                    name: '颜色选择器',
+                    icon: 'fa-eye-dropper',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-palette"></i> 选择颜色</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="colorPicker" value="#007aff" />
+                                <div class="color-info">
+                                    <div><strong>HEX:</strong> <span id="cpHex">#007aff</span></div>
+                                    <div><strong>RGB:</strong> <span id="cpRgb">rgb(0,122,255)</span></div>
+                                    <div><strong>HSL:</strong> <span id="cpHsl">hsl(211,100%,50%)</span></div>
+                                </div>
+                            </div>
+                            <button class="btn-primary" id="cpCopyBtn"><i class="fas fa-copy"></i> 复制 HEX</button>
+                            <div class="result" id="cpResult">已复制到剪贴板</div>
+                        `;
+
+                        const picker = container.querySelector('#colorPicker');
+                        const hexSpan = container.querySelector('#cpHex');
+                        const rgbSpan = container.querySelector('#cpRgb');
+                        const hslSpan = container.querySelector('#cpHsl');
+                        const copyBtn = container.querySelector('#cpCopyBtn');
+                        const result = container.querySelector('#cpResult');
+
+                        const updateColor = (hex) => {
+                            hexSpan.textContent = hex;
+                            const r = parseInt(hex.slice(1, 3), 16);
+                            const g = parseInt(hex.slice(3, 5), 16);
+                            const b = parseInt(hex.slice(5, 7), 16);
+                            rgbSpan.textContent = `rgb(${r},${g},${b})`;
+                            const hsl = rgbToHsl(r, g, b);
+                            hslSpan.textContent = `hsl(${hsl[0].toFixed(0)},${hsl[1].toFixed(0)}%,${hsl[2].toFixed(0)}%)`;
+                        };
+
+                        function rgbToHsl(r, g, b) {
+                            r /= 255;
+                            g /= 255;
+                            b /= 255;
+                            const max = Math.max(r, g, b),
+                                min = Math.min(r, g, b);
+                            let h, s, l = (max + min) / 2;
+                            if (max === min) { h = s = 0; } else {
+                                const d = max - min;
+                                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                                if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+                                else if (max === g) h = ((b - r) / d + 2) / 6;
+                                else h = ((r - g) / d + 4) / 6;
+                            }
+                            return [h * 360, s * 100, l * 100];
+                        }
+
+                        picker.addEventListener('input', (e) => {
+                            updateColor(e.target.value);
+                        });
+
+                        copyBtn.addEventListener('click', () => {
+                            const hex = picker.value;
+                            navigator.clipboard.writeText(hex).then(() => {
+                                result.textContent = '✅ 已复制 HEX: ' + hex;
+                            }).catch(() => {
+                                result.textContent = '⚠️ 复制失败，请手动复制';
+                            });
+                        });
+
+                        updateColor('#007aff');
+                    }
+                },
+
+                // ---------- 27. 字数统计 (修复图标和样式) ----------
+                wordCount: {
+                    name: '字数统计',
+                    icon: 'fa-align-left', // 使用可靠图标
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-pen"></i> 输入文本</label>
+                            <textarea id="wcInput" rows="5">这是一个测试文本，包含中英文和数字123，还有标点符号！</textarea>
+                            <button class="btn-primary" id="wcBtn"><i class="fas fa-chart-simple"></i> 统计</button>
+                            <div class="result word-count-result" id="wcResult" style="text-align:left;font-size:15px;white-space:pre-wrap;">结果</div>
+                        `;
+
+                        const input = container.querySelector('#wcInput');
+                        const btn = container.querySelector('#wcBtn');
+                        const result = container.querySelector('#wcResult');
+
+                        const count = () => {
+                            const text = input.value;
+                            const charCount = text.length;
+                            const charNoSpace = text.replace(/\s/g, '').length;
+                            const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+                            const lineCount = text.split('\n').length;
+                            const chineseCount = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+                            const englishCount = (text.match(/[a-zA-Z]/g) || []).length;
+                            const digitCount = (text.match(/\d/g) || []).length;
+                            const punctuationCount = (text.match(/[，。！？；：、""''（）\.,!?;:""''()]/g) || []).length;
+                            result.innerHTML = `
+                                📊 统计结果：
+                                总字符数：${charCount}
+                                不含空格字符：${charNoSpace}
+                                单词数：${wordCount}
+                                行数：${lineCount}
+                                中文字符：${chineseCount}
+                                英文字母：${englishCount}
+                                数字：${digitCount}
+                                标点符号：${punctuationCount}
+                            `;
+                        };
+
+                        btn.addEventListener('click', count);
+                        count();
+                    }
+                },
+
+                // ---------- 28. 坐标转换 ----------
+                coordConvert: {
+                    name: '坐标转换',
+                    icon: 'fa-location-dot',
+                    render: (container) => {
+                        container.innerHTML = `
+                            <label><i class="fas fa-globe"></i> 输入十进制度数</label>
+                            <input type="text" id="coordInput" placeholder="例如 39.9042" value="39.9042" />
+                            <label><i class="fas fa-arrow-right"></i> 度分秒格式</label>
+                            <button class="btn-primary" id="coordBtn"><i class="fas fa-sync"></i> 转换</button>
+                            <div class="result" id="coordResult">结果</div>
+                            <p class="text-muted text-center mt-8"><i class="fas fa-info-circle"></i> 将十进制度数转为度分秒</p>
+                        `;
+
+                        const input = container.querySelector('#coordInput');
+                        const btn = container.querySelector('#coordBtn');
+                        const result = container.querySelector('#coordResult');
+
+                        const convert = () => {
+                            const val = parseFloat(input.value);
+                            if (isNaN(val)) { result.textContent = '请输入有效数字'; return; }
+                            const deg = Math.floor(val);
+                            const min = Math.floor((val - deg) * 60);
+                            const sec = ((val - deg - min / 60) * 3600).toFixed(2);
+                            result.innerHTML = `${val}° = ${deg}° ${min}' ${sec}"`;
+                        };
+
+                        btn.addEventListener('click', convert);
+                        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') convert(); });
+                        convert();
+                    }
+                }
+            };
+
+            // ============================================================
+            //  工具分类配置
+            // ============================================================
+            const TOOL_GROUPS = {
+                common: ['calculator', 'scientific', 'timer', 'unit', 'currency'],
+                calc: ['baseConvert', 'color', 'bmi', 'random', 'coordConvert'],
+                dev: ['jsonFormat', 'uuid', 'urlEncode', 'base64', 'regex', 'markdown'],
+                security: ['passwordStrength', 'qr', 'imageToBase64'],
+                time: ['timestamp', 'date', 'age', 'countdown', 'mortgage'],
+                design: ['diff', 'colorPicker', 'wordCount']
+            };
+
+            // ============================================================
+            //  DOM 引用
+            // ============================================================
+            const panel = document.getElementById('sharedPanel');
+            const overlay = document.getElementById('panelOverlay');
+            const panelTitle = document.getElementById('panelTitle');
+            const panelBody = document.getElementById('panelBody');
+            const panelClose = document.getElementById('panelClose');
+            const resetBtn = document.getElementById('resetAllBtn');
+
+            let currentToolId = null;
+            let currentCardEl = null;
+            let isOpen = false;
+            let cleanupFn = null;
+            let isAnimating = false;
+
+            // ============================================================
+            //  渲染卡片
+            // ============================================================
+            function renderCards() {
+                for (const [group, toolIds] of Object.entries(TOOL_GROUPS)) {
+                    const gridId = group === 'common' ? 'toolGridCommon' :
+                        group === 'calc' ? 'toolGridCalc' :
+                        group === 'dev' ? 'toolGridDev' :
+                        group === 'security' ? 'toolGridSecurity' :
+                        group === 'time' ? 'toolGridTime' :
+                        group === 'design' ? 'toolGridDesign' : null;
+                    if (!gridId) continue;
+                    const grid = document.getElementById(gridId);
+                    if (!grid) continue;
+                    grid.innerHTML = '';
+                    for (const id of toolIds) {
+                        const tool = TOOLS[id];
+                        if (!tool) continue;
+                        const card = document.createElement('div');
+                        card.className = 'tool-card';
+                        card.dataset.tool = id;
+                        card.innerHTML = `
+                            <span class="icon"><i class="fas ${tool.icon}"></i></span>
+                            <span class="name">${tool.name}</span>
+                            <span class="desc">点击打开</span>
+                        `;
+                        card.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            openTool(id, card);
+                        });
+                        grid.appendChild(card);
+                    }
+                }
+            }
+
+            // ============================================================
+            //  打开工具 (共享元素延展动画)
+            // ============================================================
+            function openTool(toolId, cardEl) {
+                if (isOpen || isAnimating) {
+                    closePanel(() => {
+                        openTool(toolId, cardEl);
+                    });
+                    return;
+                }
+
+                const tool = TOOLS[toolId];
+                if (!tool) return;
+
+                if (cleanupFn) {
+                    cleanupFn();
+                    cleanupFn = null;
+                }
+
+                currentToolId = toolId;
+                currentCardEl = cardEl;
+
+                cardEl.classList.add('hidden');
+
+                const cardRect = cardEl.getBoundingClientRect();
+                const cardStyle = window.getComputedStyle(cardEl);
+                const cardRadius = parseFloat(cardStyle.borderRadius) || 16;
+
+                const winW = window.innerWidth;
+                const winH = window.innerHeight;
+                const panelW = Math.min(440, winW - 32);
+                const panelH = Math.min(winH * 0.8, 600);
+                const panelLeft = (winW - panelW) / 2;
+                const panelTop = (winH - panelH) / 2;
+
+                panel.style.transition = 'none';
+                panel.style.left = cardRect.left + 'px';
+                panel.style.top = cardRect.top + 'px';
+                panel.style.width = cardRect.width + 'px';
+                panel.style.height = cardRect.height + 'px';
+                panel.style.borderRadius = cardRadius + 'px';
+                panel.style.backdropFilter = 'blur(0px) saturate(180%)';
+                panel.style.WebkitBackdropFilter = 'blur(0px) saturate(180%)';
+                panel.style.opacity = '1';
+                panel.style.pointerEvents = 'none';
+                panel.classList.remove('open');
+
+                panelTitle.innerHTML = `<i class="fas ${tool.icon}"></i> ${tool.name}`;
+                panelBody.innerHTML = '';
+                tool.render(panelBody);
+                if (tool.cleanup) {
+                    cleanupFn = () => { tool.cleanup(panelBody); };
+                }
+
+                void panel.offsetHeight;
+
+                overlay.classList.add('active');
+                panel.style.transition =
+                    'left 0.55s cubic-bezier(0.32, 0.72, 0, 1), ' +
+                    'top 0.55s cubic-bezier(0.32, 0.72, 0, 1), ' +
+                    'width 0.55s cubic-bezier(0.32, 0.72, 0, 1), ' +
+                    'height 0.55s cubic-bezier(0.32, 0.72, 0, 1), ' +
+                    'border-radius 0.55s cubic-bezier(0.32, 0.72, 0, 1), ' +
+                    'backdrop-filter 0.55s cubic-bezier(0.32, 0.72, 0, 1), ' +
+                    'opacity 0.4s ease';
+                panel.style.left = panelLeft + 'px';
+                panel.style.top = panelTop + 'px';
+                panel.style.width = panelW + 'px';
+                panel.style.height = panelH + 'px';
+                panel.style.borderRadius = '28px';
+                panel.style.backdropFilter = 'blur(30px) saturate(180%)';
+                panel.style.WebkitBackdropFilter = 'blur(30px) saturate(180%)';
+                panel.style.pointerEvents = 'auto';
+                panel.classList.add('open');
+                isOpen = true;
+                document.body.style.overflow = 'hidden';
+
+                panelBody.addEventListener('click', (e) => e.stopPropagation());
+            }
+
+            // ============================================================
+            //  关闭面板
+            // ============================================================
+            function closePanel(callback) {
+                if (!isOpen && !isAnimating) {
+                    if (callback) callback();
+                    return;
+                }
+
+                const cardEl = currentCardEl;
+                if (!cardEl) {
+                    panel.classList.remove('open');
+                    panel.style.opacity = '0';
+                    overlay.classList.remove('active');
+                    isOpen = false;
+                    document.body.style.overflow = '';
+                    if (cleanupFn) { cleanupFn();
+                        cleanupFn = null; }
+                    if (callback) callback();
+                    return;
+                }
+
+                isAnimating = true;
+                cardEl.classList.remove('hidden');
+
+                const cardRect = cardEl.getBoundingClientRect();
+                const cardStyle = window.getComputedStyle(cardEl);
+                const cardRadius = parseFloat(cardStyle.borderRadius) || 16;
+
+                panel.style.transition =
+                    'left 0.5s cubic-bezier(0.32, 0.72, 0, 1), ' +
+                    'top 0.5s cubic-bezier(0.32, 0.72, 0, 1), ' +
+                    'width 0.5s cubic-bezier(0.32, 0.72, 0, 1), ' +
+                    'height 0.5s cubic-bezier(0.32, 0.72, 0, 1), ' +
+                    'border-radius 0.5s cubic-bezier(0.32, 0.72, 0, 1), ' +
+                    'backdrop-filter 0.5s cubic-bezier(0.32, 0.72, 0, 1), ' +
+                    'opacity 0.4s ease';
+                panel.style.left = cardRect.left + 'px';
+                panel.style.top = cardRect.top + 'px';
+                panel.style.width = cardRect.width + 'px';
+                panel.style.height = cardRect.height + 'px';
+                panel.style.borderRadius = cardRadius + 'px';
+                panel.style.backdropFilter = 'blur(0px) saturate(180%)';
+                panel.style.WebkitBackdropFilter = 'blur(0px) saturate(180%)';
+                panel.style.opacity = '0';
+                panel.style.pointerEvents = 'none';
+                panel.classList.remove('open');
+
+                overlay.classList.remove('active');
+
+                const onFinish = () => {
+                    panel.style.transition = 'none';
+                    panel.style.opacity = '0';
+                    isOpen = false;
+                    isAnimating = false;
+                    document.body.style.overflow = '';
+                    if (cleanupFn) { cleanupFn();
+                        cleanupFn = null; }
+                    if (callback) callback();
+                };
+
+                let finished = false;
+                const handleTransitionEnd = (e) => {
+                    if (e.propertyName === 'opacity' || e.propertyName === 'left') {
+                        if (!finished) {
+                            finished = true;
+                            panel.removeEventListener('transitionend', handleTransitionEnd);
+                            onFinish();
+                        }
+                    }
+                };
+                panel.addEventListener('transitionend', handleTransitionEnd);
+                setTimeout(() => {
+                    if (!finished) {
+                        finished = true;
+                        panel.removeEventListener('transitionend', handleTransitionEnd);
+                        onFinish();
+                    }
+                }, 600);
+            }
+
+            // ============================================================
+            //  事件绑定
+            // ============================================================
+            panelClose.addEventListener('click', () => closePanel());
+            overlay.addEventListener('click', () => closePanel());
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closePanel();
+            });
+
+            document.querySelectorAll('.tab-item').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const target = tab.dataset.tab;
+                    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                    const panelEl = document.querySelector(`.tab-panel[data-tab="${target}"]`);
+                    if (panelEl) panelEl.classList.add('active');
+                });
+            });
+
+            resetBtn.addEventListener('click', () => {
+                closePanel(() => {
+                    const activeTab = document.querySelector('.tab-item.active');
+                    if (activeTab) {
+                        const target = activeTab.dataset.tab;
+                        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                        const panelEl = document.querySelector(`.tab-panel[data-tab="${target}"]`);
+                        if (panelEl) panelEl.classList.add('active');
+                    }
+                    document.getElementById('mainContent').scrollTop = 0;
+                });
+            });
+
+            let resizeTimer = null;
+            window.addEventListener('resize', () => {
+                if (isOpen && currentToolId) {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(() => {
+                        const winW = window.innerWidth;
+                        const winH = window.innerHeight;
+                        const panelW = Math.min(440, winW - 32);
+                        const panelH = Math.min(winH * 0.8, 600);
+                        const panelLeft = (winW - panelW) / 2;
+                        const panelTop = (winH - panelH) / 2;
+                        panel.style.left = panelLeft + 'px';
+                        panel.style.top = panelTop + 'px';
+                        panel.style.width = panelW + 'px';
+                        panel.style.height = panelH + 'px';
+                    }, 200);
+                }
+            });
+
+            // ============================================================
+            //  启动
+            // ============================================================
+            renderCards();
+
+            console.log('🧰 万能工具 — 28个工具，全部图标正常，字数统计左对齐，文件选择有样式');
+        })();
+    </script>
+</body>
+</html>
