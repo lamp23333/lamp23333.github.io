@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>LAMP工具包</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<style>
+/* ==========================================================
+   LAMP工具包 v2.0.pre05 — 按苹果设计准则重写（修订版）
+   修订要点：
+   1) 移除「最近使用 / 我的收藏」（消除打开面板的额外开销）
+   2) 面板严格居中（left:0;top:0 + transform 精确位移）
+   3) 共享元素动画：真实 width/height 插值（非 scale 贴图缩放）
+      —— 圆角独立插值不变形，可随时中断/重定向（WAAPI）
+   4) 布局全宽适配（桌面/平板/手机自动铺满，网格 auto-fill）
+   5) 底部 Tab 改为悬浮胶囊（宽度自适应内容，不贴底不通栏）
+   6) 修复 Tab 切换失效（补齐 .tab-panel 显示控制）
+   7) 标题改为「LAMP工具包」，移除顶部时钟（静态托管）
+   8) pre05：并行动画机制 + clip-path 蒙版揭露 + 卡片按压收缩
+   9) pre05：移除旧版苹方 CDN（系统苹方更清晰）、液态玻璃 Tab 拖拽
+   ========================================================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  /* 苹果设计令牌 */
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','HarmonyOS Sans SC','SF Pro SC','SF Pro Display','SF Pro Text','Helvetica Neue','Microsoft YaHei',sans-serif;
+  --bg-primary:#f2f2f7;
+  --bg-secondary:rgba(255,255,255,.66);
+  --bg-elevated:rgba(255,255,255,.82);
+  --bg-field:rgba(255,255,255,.7);
+  --text-primary:#1c1c1e;
+  --text-secondary:#3a3a3c;
+  --text-tertiary:#8e8e93;
+  --separator:rgba(60,60,67,.09);
+  --separator-strong:rgba(60,60,67,.18);
+  --tint:#0a84ff;
+  --tint-press:#0060df;
+  --green:#34c759;
+  --orange:#ff9500;
+  --red:#ff3b30;
+  --purple:#af52de;
+  --teal:#30b0c7;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.03),0 4px 12px rgba(0,0,0,.04);
+  --shadow-md:0 8px 28px rgba(0,0,0,.08),0 2px 8px rgba(0,0,0,.04);
+  --shadow-lg:0 24px 70px rgba(0,0,0,.18);
+  --r-sm:12px;--r-md:16px;--r-lg:22px;--r-xl:28px;--r-full:999px;
+  --blur:28px;
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --ease-in-out:cubic-bezier(.77,0,.175,1);
+  --ease-drawer:cubic-bezier(.32,.72,0,1);
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  /* 内容最大宽度：超过后两侧留白由 padding 接管，页面始终铺满 */
+  --content-max:1200px;
+  --pad-side:max(16px,calc((100vw - var(--content-max)) / 2));
+}
+
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg-primary:#000;
+    --bg-secondary:rgba(28,28,30,.72);
+    --bg-elevated:rgba(28,28,30,.86);
+    --bg-field:rgba(44,44,46,.6);
+    --text-primary:#f5f5f7;
+    --text-secondary:#aeaeb2;
+    --text-tertiary:#636366;
+    --separator:rgba(255,255,255,.08);
+    --separator-strong:rgba(255,255,255,.16);
+    --tint:#0a84ff;
+    --tint-press:#409cff;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.35);
+    --shadow-md:0 10px 32px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.3);
+    --shadow-lg:0 26px 80px rgba(0,0,0,.65);
+  }
+}
+
+/* 减少动态：一切降级为 0.01ms，JS 内另有 reduced 分支兜底 */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+
+html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--bg-primary);color:var(--text-primary);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;touch-action:manipulation;user-select:none;-webkit-user-select:none;letter-spacing:.005em}
+
+/* 背景柔光光斑（极克制，仅装饰） */
+#app::before{
+  content:"";position:fixed;top:-180px;right:-120px;width:420px;height:420px;border-radius:50%;
+  background:radial-gradient(circle,rgba(10,132,255,.12),transparent 62%);pointer-events:none;z-index:0;
+}
+#app::after{
+  content:"";position:fixed;bottom:-200px;left:-140px;width:460px;height:460px;border-radius:50%;
+  background:radial-gradient(circle,rgba(175,82,222,.10),transparent 62%);pointer-events:none;z-index:0;
+}
+@media (prefers-color-scheme:dark){
+  #app::before{background:radial-gradient(circle,rgba(10,132,255,.16),transparent 62%)}
+  #app::after{background:radial-gradient(circle,rgba(175,82,222,.13),transparent 62%)}
+}
+
+/* 应用容器：全宽，不再有窄容器留白 */
+#app{
+  display:flex;flex-direction:column;height:100%;width:100%;position:relative;overflow:hidden;
+  background:transparent;isolation:isolate;
+}
+
+/* ============ 顶部（随视口自适应内边距） ============ */
+.header{
+  position:relative;z-index:30;padding:calc(var(--safe-top) + 14px) var(--pad-side) 12px;
+  display:flex;flex-direction:column;gap:12px;
+}
+.header-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.header-title{
+  font-size:clamp(24px,4vw,31px);line-height:1.08;font-weight:700;letter-spacing:-.022em;
+  background:linear-gradient(135deg,var(--text-primary) 40%,var(--text-tertiary));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  display:flex;align-items:center;gap:10px;white-space:nowrap;
+}
+.header-title i{font-size:.85em;-webkit-text-fill-color:var(--tint)}
+.header-sub{font-size:13px;color:var(--text-tertiary);font-weight:400;margin-top:2px;letter-spacing:.01em}
+
+.header-action{
+  font-size:14px;font-weight:500;color:var(--tint);background:var(--bg-field);border:1px solid var(--separator);
+  padding:8px 14px;border-radius:var(--r-full);cursor:pointer;font-family:var(--font);
+  -webkit-tap-highlight-color:transparent;flex-shrink:0;
+  transition:transform .14s var(--ease-out),background .16s ease,box-shadow .16s ease;
+  backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
+  box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:6px;
+}
+.header-action:active{transform:scale(.96);background:var(--bg-secondary)}
+.header-action i{font-size:12px}
+
+/* 搜索条 */
+.search-wrap{position:relative;z-index:30}
+.search-box{
+  display:flex;align-items:center;gap:10px;background:var(--bg-field);border:1px solid var(--separator);
+  border-radius:14px;padding:11px 14px;transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;
+  backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);
+  box-shadow:var(--shadow-sm);
+}
+.search-box:focus-within{border-color:var(--tint);box-shadow:0 0 0 4px rgba(10,132,255,.13)}
+.search-box i{color:var(--text-tertiary);font-size:15px;transition:color .2s ease}
+.search-box:focus-within i{color:var(--tint)}
+.search-box input{
+  flex:1;border:none;outline:none;background:transparent;font-size:17px;font-family:var(--font);
+  color:var(--text-primary);user-select:text;-webkit-user-select:text;
+}
+.search-box input::placeholder{color:var(--text-tertiary)}
+.search-clear{
+  border:none;background:rgba(120,120,128,.16);color:var(--text-secondary);width:20px;height:20px;border-radius:50%;
+  font-size:10px;cursor:pointer;display:none;align-items:center;justify-content:center;font-family:var(--font);
+}
+.search-clear.show{display:flex}
+
+/* ============ 内容区（全宽，底部为悬浮胶囊让位） ============ */
+.content{
+  flex:1;overflow-y:auto;overflow-x:hidden;padding:8px var(--pad-side) 130px;
+  -webkit-overflow-scrolling:touch;position:relative;z-index:1;scrollbar-width:none;
+}
+.content::-webkit-scrollbar{width:0;background:transparent}
+
+.section-title{
+  font-size:12px;font-weight:600;letter-spacing:.01em;color:var(--text-tertiary);
+  margin:28px 0 12px 8px;display:flex;align-items:center;gap:7px;text-transform:none;
+}
+.section-title:first-of-type{margin-top:10px}
+.section-title i{font-size:11px;opacity:.65}
+
+/* ============ Tab 面板显示控制（修复：此前所有工具挤在同一页） ============ */
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:panelFade .28s var(--ease-out)}
+body.searching .tab-panel{display:block}
+@keyframes panelFade{from{opacity:0}to{opacity:1}}
+
+/* 工具网格：auto-fill 全宽铺满，任意窗口都恰好填满 */
+.tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
+@media (max-width:380px){.tool-grid{grid-template-columns:repeat(2,1fr);gap:9px}}
+
+.tool-card{
+  display:flex;flex-direction:column;align-items:flex-start;
+  background:var(--bg-secondary);backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);
+  border:1px solid var(--separator);border-radius:var(--r-md);padding:18px 14px 16px;box-shadow:var(--shadow-sm);
+  cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;overflow:hidden;
+  transform:translateZ(0);will-change:transform,opacity;text-align:left;
+  transition:transform .16s var(--ease-out),box-shadow .22s ease,background .22s ease,border-color .22s ease;
+}
+.tool-card:active{transform:scale(.965);box-shadow:var(--shadow-sm)}
+.tool-card.pressing{transform:scale(.93) !important;box-shadow:var(--shadow-sm)}
+@media (hover:hover) and (pointer:fine){
+  .tool-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);background:var(--bg-elevated)}
+  .tool-card:hover .icon{transform:scale(1.08) rotate(-3deg)}
+}
+.tool-card .icon{
+  font-size:26px;line-height:1;display:flex;align-items:center;justify-content:center;
+  margin-bottom:10px;width:46px;height:46px;border-radius:14px;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.14);
+  transition:transform .3s var(--ease-out);
+}
+.tool-card .name{
+  font-size:15px;font-weight:600;letter-spacing:-.012em;color:var(--text-primary);line-height:1.3;
+  display:block;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.tool-card .desc{
+  display:block;width:100%;font-size:12px;color:var(--text-tertiary);margin-top:4px;line-height:1.4;letter-spacing:.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* 展开时隐藏被面板覆盖的卡片（保留布局占位） */
+.tool-card.hidden{visibility:hidden;pointer-events:none}
+
+/* 入场 stagger（JS 设置 --i 索引） */
+.tool-card.enter{animation:cardIn .5s var(--ease-out) both;animation-delay:calc(var(--i,0) * 38ms)}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media (prefers-reduced-motion:reduce){
+  .tool-card.enter{animation:cardInFade .25s ease both;animation-delay:calc(var(--i,0) * 20ms)}
+  @keyframes cardInFade{from{opacity:0}to{opacity:1}}
+}
+
+/* 搜索过滤 */
+.tool-card.grid-hidden{display:none}
+
+/* 空结果提示 */
+.empty-tip{text-align:center;padding:36px 20px;color:var(--text-tertiary);font-size:14px;display:none}
+.empty-tip i{font-size:34px;display:block;margin-bottom:10px;opacity:.5}
+.empty-tip.show{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ============ 底部 Tab：液态玻璃双选项底栏（AndroidLiquidGlass 交互+渲染完整复刻） ============ */
+.glass-bar{
+  position:fixed;bottom:calc(var(--safe-bottom) + 18px);left:50%;transform:translateX(-50%);z-index:40;
+  width:280px;height:64px;border-radius:9999px; /* 胶囊：高 64/圆角 32；JS 按选项数动态宽度 */
+  background:rgba(250,250,250,.42);
+  -webkit-backdrop-filter:blur(24px) saturate(200%);backdrop-filter:blur(24px) saturate(200%);
+  border:.5px solid rgba(255,255,255,.5);
+  box-shadow:0 8px 32px rgba(0,0,0,.12),inset 0 0 0 .5px rgba(255,255,255,.3);
+  transform-origin:center;will-change:transform;-webkit-tap-highlight-color:transparent;
+  touch-action:none; /* 关键：禁止浏览器接管触摸手势，拖动才跟手 */
+}
+@media (prefers-color-scheme:dark){
+  .glass-bar{background:rgba(28,28,30,.5);border-color:rgba(255,255,255,.14);box-shadow:0 8px 32px rgba(0,0,0,.45),inset 0 0 0 .5px rgba(255,255,255,.12)}
+}
+.glass-bar .tab-track{
+  position:absolute;left:4px;right:4px;top:4px;bottom:4px;
+  display:flex;align-items:center;gap:6px;
+  transform-origin:center;will-change:transform;
+}
+.glass-bar .tab-item{
+  flex:1 1 0;max-width:128px;min-width:0;height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  background:none;border:none;cursor:pointer;color:rgba(60,60,67,.55);font-family:inherit;
+  -webkit-tap-highlight-color:transparent;transform-origin:center;
+}
+@media (prefers-color-scheme:dark){.glass-bar .tab-item{color:rgba(235,235,245,.55)}}
+.glass-bar .tab-item .tab-icon{font-size:20px;line-height:1;display:inline-block;color:inherit}
+.glass-bar .tab-item .lbl{font-size:10px;font-weight:600;letter-spacing:.02em;white-space:nowrap}
+/* accent 着色窗口：pill 覆盖处透出强调色内容（tint 副本） */
+.glass-bar .tab-accent{
+  position:absolute;left:4px;top:4px;bottom:4px;width:128px; /* 宽度 JS 动态 = tabW */
+  border-radius:9999px;overflow:hidden;pointer-events:none;z-index:4;will-change:transform;
+}
+.glass-bar .tab-accent-track{
+  position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;gap:6px;
+  width:100%; /* 宽度 JS 动态 = track 全宽 */
+  transform-origin:center;will-change:transform;
+}
+.glass-bar .tab-item.accent{flex:1 1 0;max-width:128px;color:var(--tint);pointer-events:none}
+@media (prefers-color-scheme:dark){.glass-bar .tab-item.accent{color:#0a84ff}}
+/* 指示器 pill：玻璃透镜（z-index 在 accent 之下——blur 只作用于底栏背景，不模糊上方 accent 文字） */
+.glass-bar .tab-pill{
+  position:absolute;left:4px;top:4px;bottom:4px;width:128px; /* 宽度 JS 动态 = tabW */
+  border-radius:9999px;pointer-events:none;z-index:3;
+  background:
+    radial-gradient(140% 100% at 50% -12%, rgba(255,255,255,.34), rgba(255,255,255,0) 52%),
+    linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.03));
+  -webkit-backdrop-filter:blur(18px) saturate(220%) brightness(1.06);
+  backdrop-filter:blur(18px) saturate(220%) brightness(1.06);
+  border:.5px solid rgba(255,255,255,.4);
+  box-shadow:0 4px 14px rgba(0,0,0,.12),inset 0 0 0 .5px rgba(255,255,255,.28),inset 0 -1px 3px rgba(0,0,0,.06);
+  transform-origin:center;will-change:transform;
+}
+@media (prefers-color-scheme:dark){
+  .glass-bar .tab-pill{background:radial-gradient(140% 100% at 50% -12%, rgba(255,255,255,.16), rgba(255,255,255,0) 52%),linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.015));border-color:rgba(255,255,255,.18);box-shadow:0 4px 14px rgba(0,0,0,.4),inset 0 0 0 .5px rgba(255,255,255,.14),inset 0 -1px 3px rgba(0,0,0,.2)}
+}
+.glass-bar .tab-pill::before,.glass-bar .tab-pill::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:.5}
+.glass-bar .tab-pill::before{box-shadow:inset -1.2px 0 0 rgba(255,60,90,.14),inset 0 -1.2px 0 rgba(255,60,90,.08)}
+.glass-bar .tab-pill::after{box-shadow:inset 1.2px 0 0 rgba(0,150,255,.14),inset 0 1.2px 0 rgba(0,150,255,.08)}
+/* InteractiveHighlight：手指高光（跟随手指，与滑块一体） */
+.glass-bar .tab-ripple{
+  position:absolute;width:150px;height:150px;border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,.5), rgba(255,255,255,0) 62%);
+  pointer-events:none;z-index:5;opacity:0;mix-blend-mode:plus-lighter;will-change:transform,opacity;
+}
+@media (prefers-color-scheme:dark){.glass-bar .tab-ripple{background:radial-gradient(circle, rgba(255,255,255,.42), rgba(255,255,255,0) 62%)}}
+@media (prefers-reduced-motion:reduce){.glass-bar{transition:none!important}.glass-bar .tab-pill,.glass-bar .tab-track,.glass-bar .tab-accent,.glass-bar .tab-accent-track{transition:none!important}}
+
+/* ============ 遮罩 ============ */
+.panel-overlay{
+  position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.34);
+  opacity:0;pointer-events:none;transition:opacity .3s var(--ease-out);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);will-change:opacity;
+}
+.panel-overlay.active{opacity:1;pointer-events:auto}
+
+/* ============ 共享元素面板 ============
+   定位：left:0;top:0 —— 全部位置由 JS 的 transform 精确控制，
+   动画期间只动 width/height/transform/borderRadius（真实尺寸插值，
+   非 scale 贴图缩放，圆角保持正确形状），WAAPI 驱动，可随时中断重定向 */
+.shared-panel{
+  position:fixed;left:0;top:0;z-index:100;
+  background:rgba(255,255,255,.6);border:1px solid var(--separator);box-shadow:var(--shadow-lg);
+  border-radius:var(--r-xl);overflow:hidden;display:flex;flex-direction:column;
+  width:320px;height:240px;opacity:0;pointer-events:none;
+  will-change:transform,width,height,border-radius;
+  contain:layout paint;
+  -webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);
+}
+@media (prefers-color-scheme:dark){.shared-panel{background:rgba(28,28,30,.64)}}
+.shared-panel.open{opacity:1;pointer-events:auto}
+.shared-panel.done-hide{opacity:0;pointer-events:none}
+/* 并行动画：被新展开抢占的旧关闭动画转移到此幽灵面板（低层、不交互） */
+.shared-panel.ghost{z-index:80;pointer-events:none}
+
+.panel-header{
+  display:flex;align-items:center;justify-content:space-between;padding:18px 18px 12px 20px;
+  border-bottom:1px solid var(--separator);flex-shrink:0;
+}
+.panel-title{font-size:20px;font-weight:700;letter-spacing:-.015em;display:flex;align-items:center;gap:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.panel-title .p-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;box-shadow:0 3px 10px rgba(0,0,0,.14);flex-shrink:0}
+.panel-close{
+  background:rgba(120,120,128,.14);border:none;width:30px;height:30px;border-radius:50%;color:var(--text-secondary);
+  font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:transform .16s var(--ease-out),background .2s ease;-webkit-tap-highlight-color:transparent;font-family:var(--font);
+}
+.panel-close:active{transform:scale(.84);background:rgba(120,120,128,.24)}
+.panel-body{
+  flex:1;padding:18px 20px 22px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;
+  scrollbar-color:var(--text-tertiary) transparent;transition:opacity .16s ease;min-height:0;
+  clip-path:inset(0% 0% 0% 0% round 0px);will-change:clip-path;
+}
+.panel-body.closing{opacity:0}
+.panel-body::-webkit-scrollbar{width:4px}
+.panel-body::-webkit-scrollbar-thumb{background:var(--text-tertiary);border-radius:4px}
+
+/* ============ 工具内控件（统一苹果风格） ============ */
+.tool-body label{
+  font-size:13px;font-weight:600;color:var(--text-secondary);display:block;margin:16px 0 6px;letter-spacing:.01em;
+}
+.tool-body label:first-child{margin-top:2px}
+.tool-body label i{color:var(--text-tertiary);margin-right:6px;font-size:12px}
+.tool-body input[type="text"],.tool-body input[type="number"],.tool-body input[type="date"],.tool-body input[type="datetime-local"],
+.tool-body input[type="password"],.tool-body select,.tool-body textarea{
+  width:100%;padding:12px 14px;font-size:17px;font-family:var(--font);background:var(--bg-field);
+  border:1px solid var(--separator-strong);border-radius:14px;color:var(--text-primary);outline:none;
+  transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;-webkit-appearance:none;appearance:none;
+  user-select:text;-webkit-user-select:text;line-height:1.4;
+}
+.tool-body textarea{resize:vertical;min-height:64px}
+.tool-body input:focus,.tool-body select:focus,.tool-body textarea:focus{
+  border-color:var(--tint);box-shadow:0 0 0 4px rgba(10,132,255,.14);background:var(--bg-elevated);
+}
+.tool-body select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238e8e93' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:34px;
+}
+
+.btn-primary{
+  width:100%;margin-top:16px;padding:14px;background:var(--btn-bg,var(--tint));color:#fff;border:none;border-radius:14px;
+  font-size:17px;font-weight:600;cursor:pointer;font-family:var(--font);outline:none;-webkit-tap-highlight-color:transparent;
+  transition:transform .14s var(--ease-out),filter .18s ease,box-shadow .18s ease,opacity .2s ease;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 14px var(--btn-shadow,rgba(10,132,255,.25));
+}
+.btn-primary:active{transform:scale(.97);filter:brightness(.86)}
+.btn-primary.btn-sm{padding:11px 14px;font-size:15px;width:auto;margin-top:0;border-radius:12px;box-shadow:0 2px 8px var(--btn-shadow,rgba(10,132,255,.2))}
+.btn-secondary{background:var(--bg-field);color:var(--tint);box-shadow:none;border:1px solid var(--separator-strong)}
+.btn-secondary:active{background:var(--bg-secondary);filter:none}
+.btn-row{display:flex;gap:10px;margin-top:16px}
+.btn-row>*{flex:1;margin-top:0}
+.btn-row .btn-primary{padding:13px 10px;font-size:15px}
+/* 彩色主题按钮：阴影与按钮同色、按压统一变深 */
+.btn-purple{--btn-bg:#af52de;--btn-shadow:rgba(175,82,222,.28)}
+.btn-orange{--btn-bg:#ff9500;--btn-shadow:rgba(255,149,0,.28)}
+.btn-green{--btn-bg:#34c759;--btn-shadow:rgba(52,199,89,.28)}
+.btn-red{--btn-bg:#ff3b30;--btn-shadow:rgba(255,59,48,.28)}
+
+.result{
+  margin-top:16px;padding:16px;background:var(--bg-field);border-radius:14px;font-size:17px;font-weight:600;
+  text-align:center;color:var(--text-primary);border:1px solid var(--separator);word-break:break-all;line-height:1.55;
+  animation:resultIn .35s var(--ease-out);min-height:56px;display:flex;align-items:center;justify-content:center;
+}
+.result.placeholder{color:var(--text-tertiary);font-weight:400;font-size:15px}
+@keyframes resultIn{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
+.result small{font-weight:400;font-size:13px;color:var(--text-tertiary);display:block;margin-top:4px}
+.result.left{text-align:left;font-size:14px;font-weight:500;white-space:pre-wrap;align-items:flex-start;justify-content:flex-start}
+/* 空态提示统一：居中、15px、灰、系统字体（覆盖 .result.left 与内联 font-size 的差异） */
+.result.placeholder{
+  color:var(--text-tertiary);font-weight:400;font-size:15px!important;
+  text-align:center!important;align-items:center!important;justify-content:center!important;
+  font-family:var(--font)!important;
+}
+.result .ok{color:var(--green)}.result .warn{color:var(--orange)}.result .err{color:var(--red)}
+.text-muted{color:var(--text-tertiary);font-size:12px}
+.text-center{text-align:center}
+.mt-8{margin-top:8px}
+hr.sep{border:none;border-top:1px solid var(--separator);margin:18px 0}
+
+/* 计算器（苹果圆形按键） */
+.calc-display{
+  background:var(--bg-field);border:1px solid var(--separator);border-radius:18px;padding:14px 18px;margin-bottom:12px;
+  text-align:right;display:flex;flex-direction:column;justify-content:flex-end;min-height:96px;overflow:hidden;
+}
+.calc-display .expr{font-size:15px;color:var(--text-tertiary);font-weight:400;min-height:20px;word-break:break-all;transition:opacity .15s ease}
+.calc-display .val{
+  font-size:40px;font-weight:300;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1;
+  transition:transform .14s var(--ease-out);transform-origin:right center;color:var(--text-primary);
+}
+.calc-display .val.bump{animation:numBump .22s var(--ease-out)}
+@keyframes numBump{0%{transform:scale(1.06)}100%{transform:scale(1)}}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.calc-grid button{
+  aspect-ratio:1;border-radius:50%;font-size:23px;font-weight:500;font-family:var(--font);cursor:pointer;
+  border:none;color:var(--text-primary);background:var(--bg-field);
+  transition:transform .11s var(--ease-out),background .12s ease,box-shadow .15s ease;
+  -webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;
+}
+.calc-grid button:active{transform:scale(.9)}
+.calc-grid .c-fn{background:var(--text-tertiary);color:#fff}
+.calc-grid .c-op{background:var(--tint);color:#fff}
+.calc-grid .c-eq{background:var(--green);color:#fff}
+.calc-grid .c-clear{background:var(--red);color:#fff}
+.calc-grid .c-digit{background:var(--bg-field)}
+
+/* 计时器 / 番茄钟 */
+.timer-display{
+  font-size:56px;font-weight:300;letter-spacing:-.02em;text-align:center;padding:20px 0 8px;
+  font-variant-numeric:tabular-nums;color:var(--text-primary);line-height:1.1;
+}
+.timer-ring{position:relative;width:200px;height:200px;margin:6px auto 0}
+.timer-ring svg{transform:rotate(-90deg)}
+.timer-ring .ring-bg{stroke:var(--separator-strong);fill:none;stroke-width:10}
+.timer-ring .ring-fg{stroke:var(--tint);fill:none;stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .5s linear,stroke .4s ease}
+.timer-ring .ring-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.timer-ring .ring-label .t{font-size:42px;font-weight:300;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.timer-ring .ring-label .s{font-size:12px;color:var(--text-tertiary);margin-top:2px}
+.timer-btns{display:flex;gap:10px;margin-top:14px}
+.timer-btns button{
+  flex:1;padding:13px;border:none;border-radius:14px;font-size:16px;font-weight:600;cursor:pointer;font-family:var(--font);outline:none;
+  -webkit-tap-highlight-color:transparent;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  transition:transform .14s var(--ease-out),filter .18s ease;
+}
+.timer-btns button:active{transform:scale(.95);filter:brightness(.86)}
+.btn-start{background:var(--green);color:#fff;box-shadow:0 4px 14px rgba(52,199,89,.28)}
+.btn-pause{background:var(--orange);color:#fff;box-shadow:0 4px 14px rgba(255,149,0,.28)}
+.btn-reset{background:var(--bg-field);color:var(--text-secondary);border:1px solid var(--separator-strong);box-shadow:none}
+
+/* 分段控制（番茄钟工作/休息）—— 百分比定位，天然适配面板宽高 */
+.segmented{
+  display:flex;background:var(--bg-field);border-radius:12px;padding:3px;border:1px solid var(--separator);
+  margin-bottom:4px;position:relative;
+}
+.segmented .seg-thumb{
+  position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);
+  border-radius:9px;background:var(--bg-elevated);box-shadow:var(--shadow-sm);
+  transition:transform .35s var(--ease-out),width .35s var(--ease-out);pointer-events:none;
+}
+.segmented button{
+  flex:1;border:none;background:none;padding:9px;font-size:14px;font-weight:600;color:var(--text-tertiary);
+  font-family:var(--font);border-radius:9px;cursor:pointer;position:relative;z-index:2;
+  transition:color .25s ease;-webkit-tap-highlight-color:transparent;outline:none;
+}
+.segmented button.active{color:var(--tint)}
+
+/* 颜色工具 */
+.color-preview{width:56px;height:56px;border-radius:16px;border:1px solid var(--separator);transition:background .3s ease;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.color-chip{display:inline-block;width:18px;height:18px;border-radius:5px;vertical-align:middle;margin-right:6px;border:1px solid var(--separator)}
+
+/* 文件选择 */
+.file-input-wrapper{position:relative;overflow:hidden;display:block;width:100%}
+.file-input-wrapper input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.file-label{
+  display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;background:var(--bg-field);
+  border:1.5px dashed var(--separator-strong);border-radius:14px;text-align:center;color:var(--text-secondary);
+  font-size:15px;font-weight:500;transition:border-color .2s ease,background .2s ease,transform .14s var(--ease-out);
+}
+.file-label:active{transform:scale(.98)}
+.file-label:hover{border-color:var(--tint);background:var(--bg-secondary)}
+.file-label i{color:var(--text-tertiary)}
+
+/* QR */
+#qrCanvas{max-width:100%;height:auto;border-radius:12px;background:#fff}
+.qr-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px}
+
+/* 密码强度 */
+.pwd-meter{display:flex;gap:6px;margin:10px 0 4px}
+.pwd-meter span{flex:1;height:5px;border-radius:3px;background:var(--separator-strong);transition:background .35s ease,transform .3s var(--ease-out)}
+.pwd-meter span.on{transform:scaleY(1.15)}
+.pwd-meter span.lv1{background:var(--red)}.pwd-meter span.lv2{background:var(--orange)}.pwd-meter span.lv3{background:#ffd60a}.pwd-meter span.lv4{background:var(--green)}
+
+/* diff */
+.diff-line{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;white-space:pre-wrap;padding:3px 10px;border-radius:6px;margin:2px 0;line-height:1.5}
+.diff-added{background:rgba(52,199,89,.14);border-left:3px solid var(--green)}
+.diff-removed{background:rgba(255,59,48,.12);border-left:3px solid var(--red)}
+.diff-unchanged{opacity:.5}
+
+/* markdown */
+.md-preview{background:var(--bg-field);border:1px solid var(--separator);border-radius:14px;padding:16px;font-size:15px;line-height:1.65;text-align:left}
+.md-preview h1,.md-preview h2,.md-preview h3{margin:8px 0;letter-spacing:-.01em}
+.md-preview h1{font-size:22px}.md-preview h2{font-size:18px}.md-preview h3{font-size:16px}
+.md-preview code{background:rgba(120,120,128,.12);padding:2px 6px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.md-preview pre{background:rgba(120,120,128,.12);padding:12px;border-radius:10px;overflow-x:auto;margin:8px 0}
+.md-preview pre code{background:none;padding:0}
+.md-preview a{color:var(--tint);text-decoration:none}
+.md-preview ul,.md-preview ol{padding-left:22px;margin:6px 0}
+
+/* 哈希输出 */
+.hash-result{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;word-break:break-all;text-align:left;line-height:1.6;max-height:120px;overflow-y:auto}
+
+/* 复制按钮（次级：小巧、无蓝框高光） */
+.copy-mini{
+  display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;border:1px solid var(--separator-strong);
+  background:var(--bg-field);color:var(--text-secondary);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);outline:none;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .14s var(--ease-out),background .18s ease,color .18s ease,box-shadow .18s ease;
+}
+.copy-mini i{font-size:11px}
+.copy-mini:active{transform:scale(.94);background:var(--bg-secondary);color:var(--tint)}
+.copy-wrap{position:relative;display:flex;align-items:center;gap:8px;margin-top:10px}
+.copy-wrap .copy-mini{flex-shrink:0;margin-top:0}
+.copy-wrap .result{flex:1;margin-top:0;min-width:0}
+/* 输入框内嵌复制（右上角） */
+.field-copy{position:relative}
+.field-copy .copy-mini{position:absolute;right:8px;top:50%;transform:translateY(-50%);padding:4px 9px;z-index:2}
+.field-copy .copy-mini:active{transform:translateY(-50%) scale(.94)}
+
+/* ============ Toast（悬浮于胶囊上方） ============ */
+.toast-wrap{position:fixed;bottom:calc(var(--safe-bottom) + 108px);left:0;right:0;display:flex;justify-content:center;pointer-events:none;z-index:200}
+.toast{
+  background:rgba(28,28,30,.82);color:#fff;backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);
+  padding:10px 18px;border-radius:999px;font-size:14px;font-weight:500;box-shadow:var(--shadow-md);
+  display:flex;align-items:center;gap:8px;max-width:86%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  opacity:0;transform:translateY(14px) scale(.96);transition:opacity .3s var(--ease-out),transform .35s var(--ease-out);
+}
+.toast.show{opacity:1;transform:translateY(0) scale(1)}
+.toast i{color:var(--green)}
+
+/* ============ 页脚（苹果式灰色小字） ============ */
+.app-footer{
+  padding:34px 0 8px;text-align:center;font-size:12px;color:var(--text-tertiary);
+  display:flex;align-items:center;justify-content:center;gap:8px;opacity:.85;letter-spacing:.01em;
+}
+.app-footer .dot{opacity:.45}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 顶部 -->
+  <header class="header">
+    <div class="header-row">
+      <div>
+        <div class="header-title"><i class="fas fa-cube"></i>LAMP工具包</div>
+        <div class="header-sub">精选 30 款效率工具 · 随时随地</div>
+      </div>
+      <button class="header-action" id="resetAllBtn" aria-label="重置"><i class="fas fa-rotate-right"></i>重置</button>
+    </div>
+    <div class="search-wrap">
+      <div class="search-box">
+        <i class="fas fa-magnifying-glass"></i>
+        <input type="text" id="searchInput" placeholder="搜索工具" autocomplete="off" />
+        <button class="search-clear" id="searchClear" aria-label="清空"><i class="fas fa-xmark"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 内容 -->
+  <div class="content" id="mainContent">
+
+    <div class="tab-panel active" data-tab="common">
+      <div class="section-title"><i class="fas fa-star"></i>常用工具</div>
+      <div class="tool-grid" id="toolGridCommon"></div>
+      <div class="section-title"><i class="fas fa-calculator"></i>计算与转换</div>
+      <div class="tool-grid" id="toolGridCalc"></div>
+    </div>
+
+    <div class="tab-panel" data-tab="more">
+      <div class="section-title"><i class="fas fa-code"></i>开发者工具</div>
+      <div class="tool-grid" id="toolGridDev"></div>
+      <div class="section-title"><i class="fas fa-shield"></i>安全与检测</div>
+      <div class="tool-grid" id="toolGridSecurity"></div>
+      <div class="section-title"><i class="fas fa-clock"></i>时间与日期</div>
+      <div class="tool-grid" id="toolGridTime"></div>
+      <div class="section-title"><i class="fas fa-pen-nib"></i>文本与创意</div>
+      <div class="tool-grid" id="toolGridDesign"></div>
+    </div>
+
+    <div class="empty-tip" id="emptyTip"><i class="fas fa-magnifying-glass"></i>没有找到匹配的工具</div>
+
+    <footer class="app-footer">
+      <span>LAMP工具包</span><span class="dot">·</span><span>精选 30 款效率工具</span>
+    </footer>
+  </div>
+
+  <!-- 底部 Tab：液态玻璃双选项底栏（三层结构 + 手指高光，AndroidLiquidGlass 交互+渲染完整复刻） -->
+  <nav class="glass-bar" id="tabBar" role="tablist">
+    <div class="tab-track" id="tabTrack"></div>
+    <div class="tab-accent" id="tabAccent" aria-hidden="true"><div class="tab-accent-track" id="tabAccentTrack"></div></div>
+    <div class="tab-pill" id="tabPill"></div>
+    <div class="tab-ripple" id="tabRipple"></div>
+  </nav>
+
+  <div class="panel-overlay" id="panelOverlay"></div>
+  <div class="shared-panel" id="sharedPanel">
+    <div class="panel-header">
+      <div class="panel-title"><span class="p-icon" id="panelIcon"><i class="fas fa-cube"></i></span><span id="panelTitle">工具</span></div>
+      <button class="panel-close" id="panelClose" aria-label="关闭"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="panel-body tool-body" id="panelBody"></div>
+  </div>
+
+  <div class="toast-wrap"><div class="toast" id="toast"></div></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+/* ============================================================
+   LAMP工具包 v2.0.pre03 — 30 个工具
+   ============================================================ */
+const $ = (s,el)=>(el||document).querySelector(s);
+const $$ = (s,el)=>Array.from((el||document).querySelectorAll(s));
+const vibrate = (ms)=>{ try{ if(navigator.vibrate) navigator.vibrate(ms||8); }catch(_){} };
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* 图标语义色（克制、系统色） */
+const ICON_COLORS = {
+  calculator:'#0a84ff', scientific:'#5856d6', timer:'#ff375f', pomodoro:'#ff9500',
+  unit:'#30b0c7', currency:'#34c759', baseConvert:'#0a84ff', color:'#af52de',
+  bmi:'#ff9500', random:'#ff9f0a', coordConvert:'#30b0c7', mortgage:'#34c759',
+  age:'#ff375f', jsonFormat:'#5856d6', uuid:'#af52de', urlEncode:'#0a84ff',
+  base64:'#30b0c7', regex:'#ff9500', markdown:'#5856d6', hash:'#0a84ff',
+  diff:'#34c759', passwordStrength:'#ff3b30', qr:'#0a84ff', imageToBase64:'#af52de',
+  timestamp:'#30b0c7', date:'#0a84ff', countdown:'#ff9500', text:'#5856d6',
+  wordCount:'#34c759', colorPicker:'#af52de'
+};
+
+/* ============================================================
+   工具实现（功能与原版一致并增强，共 30 个）
+   ============================================================ */
+const TOOLS = {
+
+  /* ---------- 1. 计算器 ---------- */
+  calculator:{
+    name:'计算器', icon:'fa-calculator',
+    render(c){
+      c.innerHTML = `
+        <div class="calc-display"><div class="expr" id="cxExpr">2+3*4</div><div class="val" id="cxVal">14</div></div>
+        <div class="calc-grid">
+          <button class="c-clear" data-k="clear">AC</button><button class="c-fn" data-k="paren">(</button>
+          <button class="c-fn" data-k="paren">)</button><button class="c-op" data-k="op">÷</button>
+          <button class="c-digit" data-k="num">7</button><button class="c-digit" data-k="num">8</button>
+          <button class="c-digit" data-k="num">9</button><button class="c-op" data-k="op">×</button>
+          <button class="c-digit" data-k="num">4</button><button class="c-digit" data-k="num">5</button>
+          <button class="c-digit" data-k="num">6</button><button class="c-op" data-k="op">−</button>
+          <button class="c-digit" data-k="num">1</button><button class="c-digit" data-k="num">2</button>
+          <button class="c-digit" data-k="num">3</button><button class="c-op" data-k="op">+</button>
+          <button class="c-digit" data-k="num">0</button><button class="c-digit" data-k="num">.</button>
+          <button class="c-fn" data-k="backspace">⌫</button><button class="c-eq" data-k="equals">=</button>
+        </div>
+        <p class="text-muted text-center mt-8"><i class="fas fa-circle-info"></i> 支持 + − × ÷ 与括号，键盘可输入</p>`;
+      const exprEl = $('#cxExpr',c), valEl = $('#cxVal',c);
+      let expr = '2+3*4';
+      const norm = s => s.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
+      const compute = s => { try{
+        const r = Function('"use strict";return ('+norm(s)+')')();
+        if(typeof r==='number' && !Number.isInteger(r)) return parseFloat(r.toFixed(8)).toString();
+        return String(r);
+      }catch(_){ return '错误'; } };
+      const bump = () => { valEl.classList.remove('bump'); void valEl.offsetWidth; valEl.classList.add('bump'); };
+      const update = () => {
+        exprEl.textContent = expr||'0';
+        valEl.textContent = expr ? compute(expr) : '0';
+      };
+      const input = v => {
+        if(v==='clear') expr='';
+        else if(v==='backspace') expr=expr.slice(0,-1);
+        else if(v==='equals'){ const r=compute(expr); if(r!=='错误') expr=String(r); }
+        else if(v==='paren') expr += expr.slice(-1)==='(' || !expr ? '(' : ')';
+        else expr += v;
+        update(); if(v!=='backspace') bump(); vibrate(6);
+      };
+      $$('.calc-grid button',c).forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();input(b.dataset.k==='num'||b.dataset.k==='op'?b.textContent.trim():b.dataset.k);}));
+      const km = {'0':'0','1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','.':'.','+':'+','-':'-','*':'*','/':'/','(':'paren',')':'paren','Enter':'equals','Backspace':'backspace','Escape':'clear'};
+      const hk = e => { const t=e.target; if(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable) return; if(km[e.key]!==undefined){ e.preventDefault(); input(km[e.key]); } };
+      document.addEventListener('keydown',hk);
+      c._cleanup = ()=>document.removeEventListener('keydown',hk);
+      update();
+    }
+  },
+
+  /* ---------- 2. 科学计算器 ---------- */
+  scientific:{
+    name:'科学计算器', icon:'fa-superscript',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-code"></i>表达式</label>
+        <input type="text" id="scI" placeholder="例如 sin(30)+cos(60)" />
+        <div class="result placeholder" id="scV">请填入表达式</div>
+        <p class="text-muted text-center mt-8"><i class="fas fa-circle-info"></i> 支持 sin cos tan log ln sqrt pow 及 Math 全部函数</p>`;
+      const i=$('#scI',c),o=$('#scV',c);
+      const run=()=>{
+        let s=i.value.trim(); if(!s){o.textContent='请填入表达式';o.className='result placeholder';return;}
+        o.className='result';
+        const rep={'sin':'Math.sin','cos':'Math.cos','tan':'Math.tan','log':'Math.log','ln':'Math.log','sqrt':'Math.sqrt','pow':'Math.pow','PI':'Math.PI','E':'Math.E','abs':'Math.abs','floor':'Math.floor','ceil':'Math.ceil','round':'Math.round','random':'Math.random'};
+        for(const [k,v] of Object.entries(rep)) s=s.replace(new RegExp('\\b'+k+'\\b','g'),v);
+        try{ const r=Function('"use strict";return ('+s+')')();
+          o.textContent = typeof r==='number'&&!Number.isInteger(r)? r.toFixed(6) : String(r);
+        }catch(_){ o.textContent='⚠️ 表达式错误'; }
+      };
+      i.addEventListener('input',run);
+    }
+  },
+
+  /* ---------- 3. 计时器 ---------- */
+  timer:{
+    name:'计时器', icon:'fa-stopwatch',
+    render(c){
+      c.innerHTML = `
+        <div class="timer-display" id="tmD">00:00.00</div>
+        <div class="timer-btns">
+          <button class="btn-start" id="tmS"><i class="fas fa-play"></i>开始</button>
+          <button class="btn-pause" id="tmP" style="display:none"><i class="fas fa-pause"></i>暂停</button>
+          <button class="btn-reset" id="tmR"><i class="fas fa-rotate-left"></i>重置</button>
+        </div>
+        <p class="text-muted text-center mt-8"><i class="fas fa-hand-pointer"></i> 计时精确，暂停后继续累计</p>`;
+      let sec=0, iv=null, run=false;
+      const d=$('#tmD',c),sB=$('#tmS',c),pB=$('#tmP',c),rB=$('#tmR',c);
+      const fmt=t=>{const m=String(Math.floor(t/60)).padStart(2,'0'),s=String(Math.floor(t%60)).padStart(2,'0'),cs=String(Math.floor((t%1)*100)).padStart(2,'0');return m+':'+s+'.'+cs;};
+      const render=()=>{d.textContent=fmt(sec);};
+      const stop=()=>{if(iv){clearInterval(iv);iv=null;}run=false;sB.style.display='';pB.style.display='none';};
+      const start=()=>{if(run)return;run=true;sB.style.display='none';pB.style.display='';const t0=performance.now()-sec*1000;iv=setInterval(()=>{sec=(performance.now()-t0)/1000;if(sec<0)sec=0;render();},10);vibrate(8);};
+      sB.addEventListener('click',start);
+      pB.addEventListener('click',()=>{stop();vibrate(6);});
+      rB.addEventListener('click',()=>{stop();sec=0;render();vibrate(6);});
+      c._cleanup=stop; render();
+    }
+  },
+
+  /* ---------- 4. 番茄钟（新增） ---------- */
+  pomodoro:{
+    name:'番茄钟', icon:'fa-hourglass-half',
+    render(c){
+      c.innerHTML = `
+        <div class="segmented" id="pmSeg">
+          <div class="seg-thumb" id="pmThumb"></div>
+          <button class="active" data-mode="work">专注 25′</button>
+          <button data-mode="break">休息 5′</button>
+        </div>
+        <div class="timer-ring">
+          <svg width="200" height="200" viewBox="0 0 200 200">
+            <circle class="ring-bg" cx="100" cy="100" r="88"/>
+            <circle class="ring-fg" id="pmRing" cx="100" cy="100" r="88" stroke-dasharray="552.9" stroke-dashoffset="0"/>
+          </svg>
+          <div class="ring-label"><div class="t" id="pmTime">25:00</div><div class="s" id="pmState">专注中</div></div>
+        </div>
+        <div class="timer-btns">
+          <button class="btn-start" id="pmS"><i class="fas fa-play"></i>开始</button>
+          <button class="btn-pause" id="pmP" style="display:none"><i class="fas fa-pause"></i>暂停</button>
+          <button class="btn-reset" id="pmR"><i class="fas fa-rotate-left"></i>重置</button>
+        </div>`;
+      const C=552.9, WORK=25*60, BREAK=5*60;
+      let mode='work', left=WORK, iv=null, run=false;
+      const tEl=$('#pmTime',c), sEl=$('#pmState',c), ring=$('#pmRing',c), thumb=$('#pmThumb',c);
+      const segBtns=$$('.segmented button',c);
+      const moveThumb=()=>{ thumb.style.transform='translateX('+(mode==='work'?0:100)+'%)'; };
+      const fmt=t=>String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');
+      const render=()=>{
+        tEl.textContent=fmt(left);
+        sEl.textContent=mode==='work'?'专注中':'休息中';
+        ring.style.strokeDashoffset=(C*(1-left/(mode==='work'?WORK:BREAK))).toFixed(1);
+        ring.style.stroke=mode==='work'?'var(--tint)':'var(--green)';
+        sEl.style.color=mode==='work'?'var(--tint)':'var(--green)';
+      };
+      const stop=()=>{if(iv){clearInterval(iv);iv=null;}run=false;$('#pmS',c).style.display='';$('#pmP',c).style.display='none';};
+      const start=()=>{if(run)return;run=true;$('#pmS',c).style.display='none';$('#pmP',c).style.display='';iv=setInterval(()=>{left--;if(left<=0){left=0;stop();vibrate([80,60,80]);setTimeout(()=>{toast(mode==='work'?'🍅 专注完成，休息一下吧':'☕ 休息结束，继续专注');switchMode(mode==='work'?'break':'work');},100);}render();},1000);vibrate(8);};
+      const switchMode=m=>{mode=m;left=m==='work'?WORK:BREAK;stop();moveThumb();render();};
+      segBtns.forEach(b=>b.addEventListener('click',()=>{segBtns.forEach(x=>x.classList.remove('active'));b.classList.add('active');switchMode(b.dataset.mode);vibrate(6);}));
+      $('#pmS',c).addEventListener('click',start);
+      $('#pmP',c).addEventListener('click',()=>{stop();vibrate(6);});
+      $('#pmR',c).addEventListener('click',()=>{stop();left=mode==='work'?WORK:BREAK;render();vibrate(6);});
+      c._cleanup=stop;
+      requestAnimationFrame(()=>{moveThumb();render();});
+      window.addEventListener('resize',moveThumb);
+      c._cleanup2=()=>window.removeEventListener('resize',moveThumb);
+    }
+  },
+
+  /* ---------- 5. BMI ---------- */
+  bmi:{
+    name:'BMI 计算', icon:'fa-weight-scale',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-ruler-vertical"></i>身高 (cm)</label>
+        <input type="number" id="bH" placeholder="例如 175" step="0.1">
+        <label><i class="fas fa-weight-hanging"></i>体重 (kg)</label>
+        <input type="number" id="bW" placeholder="例如 70" step="0.1">
+        <div class="result placeholder" id="bV">请填入身高体重</div>`;
+      const h=$('#bH',c),w=$('#bW',c),v=$('#bV',c);
+      const run=()=>{const hh=parseFloat(h.value)/100,ww=parseFloat(w.value);
+        if(!hh||!ww||hh<=0||ww<=0){v.className='result placeholder';v.textContent='请填入身高体重';return;}
+        v.className='result';
+        const bmi=ww/(hh*hh);
+        let cat='';
+        if(bmi<18.5)cat='偏瘦 · 注意营养';
+        else if(bmi<24)cat='正常 · 保持良好';
+        else if(bmi<28)cat='超重 · 适当运动';
+        else cat='肥胖 · 建议咨询医生';
+        v.innerHTML='BMI = <b>'+bmi.toFixed(1)+'</b><small>'+cat+'</small>';
+      };
+      h.addEventListener('input',run);w.addEventListener('input',run);
+    }
+  },
+
+  /* ---------- 6. 单位换算 ---------- */
+  unit:{
+    name:'单位换算', icon:'fa-ruler-combined',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-tag"></i>类别</label>
+        <select id="uCat">
+          <option value="length">长度</option><option value="weight">重量</option>
+          <option value="temp">温度</option><option value="area">面积</option><option value="volume">体积</option>
+        </select>
+        <div class="btn-row"><div><label>从</label><select id="uFrom"></select></div><div><label>到</label><select id="uTo"></select></div></div>
+        <label><i class="fas fa-hashtag"></i>数值</label>
+        <input type="number" id="uV" placeholder="例如 100" step="any">
+        <div class="result placeholder" id="uR">请填入数值</div>`;
+      const units={length:{m:1,km:1000,cm:.01,mm:.001,mi:1609.344,ft:.3048,in:.0254},weight:{kg:1,g:.001,mg:.000001,lb:.453592,oz:.0283495},temp:{C:'C',F:'F',K:'K'},area:{m2:1,km2:1e6,cm2:.0001,mm2:1e-6,ha:10000,acre:4046.86},volume:{m3:1,L:.001,mL:1e-6,gal:.00378541,ft3:.0283168}};
+      const names={length:{m:'米',km:'千米',cm:'厘米',mm:'毫米',mi:'英里',ft:'英尺',in:'英寸'},weight:{kg:'千克',g:'克',mg:'毫克',lb:'磅',oz:'盎司'},temp:{C:'°C',F:'°F',K:'K'},area:{m2:'平方米',km2:'平方公里',cm2:'平方厘米',mm2:'平方毫米',ha:'公顷',acre:'英亩'},volume:{m3:'立方米',L:'升',mL:'毫升',gal:'加仑',ft3:'立方英尺'}};
+      const cat=$('#uCat',c),from=$('#uFrom',c),to=$('#uTo',c),vv=$('#uV',c),res=$('#uR',c);
+      const fill=()=>{const ks=Object.keys(units[cat.value]);from.innerHTML=ks.map(k=>'<option value="'+k+'">'+names[cat.value][k]+'</option>').join('');to.innerHTML=from.innerHTML;if(ks.length>1)to.value=ks[1];};
+      const conv=()=>{const ct=cat.value,a=from.value,b=to.value,v=parseFloat(vv.value)||0;
+        if(!vv.value.trim()){res.className='result placeholder';res.textContent='请填入数值';return;}
+        res.className='result';
+        if(ct==='temp'){let k=a==='C'?v+273.15:a==='F'?(v-32)*5/9+273.15:v;let o=b==='C'?k-273.15:b==='F'?(k-273.15)*9/5+32:k;res.innerHTML=v+' '+names[ct][a]+' = <b>'+o.toFixed(2)+'</b> '+names[ct][b];return;}
+        const base=v*units[ct][a],out=base/units[ct][b];
+        res.innerHTML=v+' '+names[ct][a]+' = <b>'+out.toFixed(4)+'</b> '+names[ct][b];};
+      cat.addEventListener('change',()=>{fill();});
+      from.addEventListener('change',conv);to.addEventListener('change',conv);vv.addEventListener('input',conv);
+      fill();
+    }
+  },
+
+  /* ---------- 7. 汇率换算 ---------- */
+  currency:{
+    name:'汇率换算', icon:'fa-coins',
+    render(c){
+      const rates={USD:1,EUR:.92,GBP:.79,JPY:149.5,CNY:7.24};
+      c.innerHTML = `
+        <label><i class="fas fa-coins"></i>金额</label>
+        <input type="number" id="cA" placeholder="例如 100" step="any">
+        <div class="btn-row"><div><label>从</label><select id="cF">${Object.keys(rates).map(x=>'<option>'+x+'</option>').join('')}</select></div><div><label>到</label><select id="cT">${Object.keys(rates).map(x=>'<option>'+x+'</option>').join('')}</select></div></div>
+        <div class="result placeholder" id="cR">请填入金额</div>
+        <p class="text-muted text-center mt-8"><i class="fas fa-circle-info"></i> 内置演示汇率，仅供参考</p>`;
+      const f=$('#cF',c),t=$('#cT',c),a=$('#cA',c),res=$('#cR',c);
+      const conv=()=>{if(!a.value.trim()){res.className='result placeholder';res.textContent='请填入金额';return;}
+        res.className='result';const v=parseFloat(a.value)||0,base=v/rates[f.value],out=base*rates[t.value];res.innerHTML=v+' '+f.value+' = <b>'+out.toFixed(2)+'</b> '+t.value;};
+      f.addEventListener('change',conv);t.addEventListener('change',conv);a.addEventListener('input',conv);
+    }
+  },
+
+  /* ---------- 8. 进制转换 ---------- */
+  baseConvert:{
+    name:'进制转换', icon:'fa-code-branch',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-hashtag"></i>输入数字</label>
+        <input type="text" id="bcI" placeholder="例如 255" />
+        <div class="btn-row"><div><label>从</label><select id="bcF"><option value="2">二进制</option><option value="8">八进制</option><option value="10" selected>十进制</option><option value="16">十六进制</option></select></div><div><label>到</label><select id="bcT"><option value="2">二进制</option><option value="8">八进制</option><option value="10">十进制</option><option value="16" selected>十六进制</option></select></div></div>
+        <div class="result placeholder" id="bcR">请填入数字</div>`;
+      const i=$('#bcI',c),f=$('#bcF',c),t=$('#bcT',c),res=$('#bcR',c);
+      const conv=()=>{const v=i.value.trim();if(!v){res.className='result placeholder';res.textContent='请填入数字';return;}
+        res.className='result';
+        const fb=parseInt(f.value),tb=parseInt(t.value),dec=parseInt(v,fb);
+        if(isNaN(dec)){res.textContent='无效数字';return;}
+        const out=dec.toString(tb),nm={2:'二进制',8:'八进制',10:'十进制',16:'十六进制'};
+        res.innerHTML=v+' ('+nm[fb]+') = <b>'+out+'</b> ('+nm[tb]+')';};
+      f.addEventListener('change',conv);t.addEventListener('change',conv);i.addEventListener('input',conv);
+    }
+  },
+
+  /* ---------- 9. 颜色转换 ---------- */
+  color:{
+    name:'颜色转换', icon:'fa-palette',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-pen"></i>输入颜色</label>
+        <input type="text" id="clI" placeholder="#ff6600 或 rgb(255,102,0)" />
+        <div class="result"><div style="display:flex;align-items:center;gap:14px;width:100%">
+          <div class="color-preview" id="clP"></div>
+          <div style="text-align:left;font-size:14px;font-weight:500;line-height:1.7" id="clT">请填入颜色</div></div></div>`;
+      const i=$('#clI',c),p=$('#clP',c),t=$('#clT',c);
+      const hsl=(r,g,b)=>{r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h,s,l=(mx+mn)/2;if(mx===mn){h=s=0;}else{const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);if(mx===r)h=((g-b)/d+(g<b?6:0))/6;else if(mx===g)h=((b-r)/d+2)/6;else h=((r-g)/d+4)/6;}return[h*360,s*100,l*100];};
+      const conv=()=>{let s=i.value.trim();if(!s){p.style.background='#e5e5ea';t.innerHTML='请填入颜色';return;}
+        let r,g,b;const m=s.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+        if(m){r=parseInt(m[1],16);g=parseInt(m[2],16);b=parseInt(m[3],16);}
+        else{const m2=s.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);if(m2){r=+m2[1];g=+m2[2];b=+m2[3];}else{t.innerHTML='⚠️ 无法解析，请使用 #rrggbb 或 rgb(r,g,b)';p.style.background='#e5e5ea';return;}}
+        const hex='#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join(''),h=hsl(r,g,b);
+        p.style.background=hex;t.innerHTML='HEX: <b>'+hex+'</b><br>RGB: rgb('+r+','+g+','+b+')<br>HSL: hsl('+h[0].toFixed(0)+','+h[1].toFixed(0)+'%,'+h[2].toFixed(0)+'%)';};
+      i.addEventListener('input',conv);
+    }
+  },
+
+  /* ---------- 10. 随机工具 ---------- */
+  random:{
+    name:'随机工具', icon:'fa-dice',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-arrow-down"></i>最小值</label>
+        <input type="number" id="rMin" placeholder="例如 1">
+        <label><i class="fas fa-arrow-up"></i>最大值</label>
+        <input type="number" id="rMax" placeholder="例如 100">
+        <button class="btn-primary" id="rB"><i class="fas fa-dice"></i>生成随机数</button>
+        <div class="result placeholder" id="rR" style="font-size:28px">请填入范围</div>
+        <div class="btn-row"><button class="btn-primary btn-purple" id="rP"><i class="fas fa-key"></i>随机密码</button><button class="btn-primary btn-orange" id="rC"><i class="fas fa-palette"></i>随机颜色</button></div>
+        <div class="result left placeholder" id="rPR" style="font-size:13px">生成结果将展示在这里</div>
+        <div class="copy-wrap"><button class="copy-mini" id="rC2"><i class="fas fa-copy"></i>复制结果</button></div>`;
+      const mn=$('#rMin',c),mx=$('#rMax',c),res=$('#rR',c),res2=$('#rPR',c);
+      let last='';
+      const genNum=()=>{const a=parseInt(mn.value),b=parseInt(mx.value);if(!mn.value.trim()||!mx.value.trim()||isNaN(a)||isNaN(b)){res.className='result placeholder';res.textContent='请填入范围';return;}
+        if(a>=b){res.className='result placeholder';res.textContent='⚠️ 最小值需小于最大值';return;}
+        res.className='result';res.style.color='var(--tint)';
+        const v=Math.floor(Math.random()*(b-a+1))+a;res.textContent=v;last=String(v);vibrate(8);};
+      $('#rB',c).addEventListener('click',genNum);
+      mn.addEventListener('input',()=>{if(!mn.value.trim()||!mx.value.trim()){res.className='result placeholder';res.textContent='请填入范围';}});
+      mx.addEventListener('input',()=>{if(!mn.value.trim()||!mx.value.trim()){res.className='result placeholder';res.textContent='请填入范围';}});
+      $('#rP',c).addEventListener('click',()=>{const ch='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';let p='';for(let i=0;i<12;i++)p+=ch[Math.floor(Math.random()*ch.length)];res2.className='result left';res2.textContent='🔑 '+p;last=p;vibrate(8);});
+      $('#rC',c).addEventListener('click',()=>{const r=Math.floor(Math.random()*256),g=Math.floor(Math.random()*256),b=Math.floor(Math.random()*256),hex='#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');res2.className='result left';res2.innerHTML='<span class="color-chip" style="background:'+hex+'"></span>'+hex;last=hex;vibrate(8);});
+      $('#rC2',c).addEventListener('click',()=>{copyText(last,last?'已复制结果':'请先生成');vibrate(6);});
+    }
+  },/* ---------- 11. 坐标转换 ---------- */
+  coordConvert:{
+    name:'坐标转换', icon:'fa-location-dot',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-globe"></i>十进制度数</label>
+        <input type="text" id="cdI" placeholder="例如 39.9042" />
+        <div class="result placeholder" id="cdR">请填入十进制度数</div>
+        <p class="text-muted text-center mt-8"><i class="fas fa-circle-info"></i> 支持负数（南纬/西经）</p>`;
+      const i=$('#cdI',c),res=$('#cdR',c);
+      const conv=()=>{const v=parseFloat(i.value);if(i.value.trim()===''||isNaN(v)){res.className='result placeholder';res.textContent='请填入十进制度数';return;}
+        res.className='result';
+        const sign=v<0?'-':'',abs=Math.abs(v),deg=Math.floor(abs),m=Math.floor((abs-deg)*60),s=((abs-deg-m/60)*3600).toFixed(2);
+        res.innerHTML=sign+deg+'° '+m+"' "+s+'"';};
+      i.addEventListener('input',conv);
+    }
+  },
+
+  /* ---------- 12. 房贷计算 ---------- */
+  mortgage:{
+    name:'房贷计算', icon:'fa-house-chimney',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-dollar-sign"></i>贷款总额 (万元)</label>
+        <input type="number" id="mAmt" placeholder="例如 100">
+        <label><i class="fas fa-percent"></i>年利率 (%)</label>
+        <input type="number" id="mRate" placeholder="例如 4.9" step="0.01">
+        <label><i class="fas fa-clock"></i>贷款期限 (年)</label>
+        <input type="number" id="mYr" placeholder="例如 30">
+        <div class="result left placeholder" id="mR">请填入贷款信息</div>`;
+      const a=$('#mAmt',c),r=$('#mRate',c),y=$('#mYr',c),res=$('#mR',c);
+      const run=()=>{const p=parseFloat(a.value)*10000,ar=parseFloat(r.value)/100,mo=parseFloat(y.value)*12;
+        if(!a.value.trim()||!r.value.trim()||!y.value.trim()||!p||!ar||!mo||p<=0||mo<=0){res.className='result left placeholder';res.textContent='请填入贷款信息';return;}
+        res.className='result left';
+        const mr=ar/12,pay=p*mr*Math.pow(1+mr,mo)/(Math.pow(1+mr,mo)-1),tot=pay*mo,int=tot-p;
+        res.innerHTML='<b>月供</b>　'+pay.toFixed(2)+' 元<br><b>总利息</b>　'+int.toFixed(2)+' 元<br><b>总还款</b>　'+tot.toFixed(2)+' 元';};
+      a.addEventListener('input',run);r.addEventListener('input',run);y.addEventListener('input',run);
+    }
+  },
+
+  /* ---------- 13. 年龄计算 ---------- */
+  age:{
+    name:'年龄计算', icon:'fa-cake-candles',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-calendar"></i>出生日期</label>
+        <input type="date" id="agB">
+        <div class="result left placeholder" id="agR">请选择出生日期</div>`;
+      const b=$('#agB',c),res=$('#agR',c);
+      const calc=()=>{if(!b.value){res.className='result left placeholder';res.textContent='请选择出生日期';return;}
+        const d=new Date(b.value);if(isNaN(d)){res.className='result left placeholder';res.textContent='⚠️ 请选择有效日期';return;}
+        res.className='result left';
+        const now=new Date();let age=now.getFullYear()-d.getFullYear();const m=now.getMonth()-d.getMonth();if(m<0||(m===0&&now.getDate()<d.getDate()))age--;
+        const days=Math.floor(Math.abs(now-d)/86400000);
+        const nxt=new Date(now.getFullYear(),d.getMonth(),d.getDate());if(nxt<now)nxt.setFullYear(nxt.getFullYear()+1);
+        const nd=Math.ceil((nxt-now)/86400000);
+        res.innerHTML='<b>周岁</b>　'+age+' 岁<br><b>已生活</b>　'+days+' 天<br><b>下次生日</b>　还有 '+nd+' 天';};
+      b.addEventListener('change',calc);
+    }
+  },
+
+  /* ---------- 14. JSON 格式化 ---------- */
+  jsonFormat:{
+    name:'JSON 格式化', icon:'fa-file-code',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-code"></i>输入 JSON</label>
+        <textarea id="jI" rows="4" placeholder='{"name":"张三","age":30}'></textarea>
+        <div class="result left placeholder" id="jR" style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px">请填入 JSON</div>
+        <div class="copy-wrap"><button class="copy-mini" id="jC"><i class="fas fa-copy"></i>复制结果</button><button class="copy-mini" id="jM"><i class="fas fa-compress"></i>压缩</button></div>`;
+      const i=$('#jI',c),res=$('#jR',c);
+      const run=min=>{const t=i.value.trim();if(!t){res.className='result left placeholder';res.textContent='请填入 JSON';return;}
+        res.className='result left';
+        try{const o=JSON.parse(t);res.textContent=min?JSON.stringify(o):JSON.stringify(o,null,2);}catch(e){res.innerHTML='<span class="err">⚠️ 无效 JSON：'+e.message.replace(/</g,'&lt;')+'</span>';}};
+      i.addEventListener('input',()=>run(false));
+      $('#jM',c).addEventListener('click',()=>{run(true);vibrate(6);});
+      $('#jC',c).addEventListener('click',()=>{copyText(res.textContent,'已复制 JSON');vibrate(6);});
+    }
+  },
+
+  /* ---------- 15. UUID 生成 ---------- */
+  uuid:{
+    name:'UUID 生成', icon:'fa-fingerprint',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-key"></i>UUID v4</label>
+        <button class="btn-primary" id="uB2"><i class="fas fa-dice"></i>生成</button>
+        <div class="result" id="uR2" style="font-size:13px;font-family:ui-monospace,Menlo,monospace">—</div>
+        <button class="copy-mini" id="uC2" style="margin-top:14px"><i class="fas fa-copy"></i>复制</button>
+        <p class="text-muted text-center mt-8"><i class="fas fa-circle-info"></i> 符合 RFC 4122 v4 标准</p>`;
+      const res=$('#uR2',c);
+      const gen=()=>{const u='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,cc=>{const r=Math.random()*16|0,v=cc==='x'?r:(r&0x3|0x8);return v.toString(16);});res.textContent=u;return u;};
+      $('#uB2',c).addEventListener('click',()=>{gen();vibrate(8);});
+      $('#uC2',c).addEventListener('click',()=>{const u=res.textContent==='—'?gen():res.textContent;copyText(u,'已复制 UUID');vibrate(6);});
+      gen();
+    }
+  },
+
+  /* ---------- 16. URL 编解码 ---------- */
+  urlEncode:{
+    name:'URL 编解码', icon:'fa-link',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-pen"></i>输入文本</label>
+        <input type="text" id="urI" placeholder="输入文本，实时编解码" />
+        <div class="result left placeholder" id="urE">编码结果</div>
+        <div class="result left placeholder" id="urD">解码结果</div>
+        <div class="copy-wrap"><button class="copy-mini" id="urC"><i class="fas fa-copy"></i>复制编码结果</button></div>`;
+      const i=$('#urI',c),e=$('#urE',c),d=$('#urD',c);
+      const run=()=>{const t=i.value;if(!t.trim()){e.className='result left placeholder';e.textContent='编码结果';d.className='result left placeholder';d.textContent='解码结果';return;}
+        e.className='result left';d.className='result left';
+        try{e.textContent=encodeURIComponent(t);}catch(_){e.textContent='⚠️ 编码失败';}
+        try{d.textContent=decodeURIComponent(t);}catch(_){d.textContent='⚠️ 解码失败';}};
+      i.addEventListener('input',run);
+      $('#urC',c).addEventListener('click',()=>{copyText(e.textContent,'已复制编码结果');vibrate(6);});
+    }
+  },
+
+  /* ---------- 17. Base64 编解码 ---------- */
+  base64:{
+    name:'Base64 编解码', icon:'fa-file-code',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-pen"></i>输入文本</label>
+        <textarea id="b64I" rows="3" placeholder="输入文本，实时编解码"></textarea>
+        <div class="result left placeholder" id="b64E">编码结果</div>
+        <div class="result left placeholder" id="b64D">解码结果</div>
+        <div class="copy-wrap"><button class="copy-mini" id="b64C"><i class="fas fa-copy"></i>复制编码结果</button></div>`;
+      const i=$('#b64I',c),e=$('#b64E',c),d=$('#b64D',c);
+      const run=()=>{const t=i.value;if(!t.trim()){e.className='result left placeholder';e.textContent='编码结果';d.className='result left placeholder';d.textContent='解码结果';return;}
+        e.className='result left';d.className='result left';
+        try{e.textContent=btoa(unescape(encodeURIComponent(t)));}catch(_){e.textContent='⚠️ 编码失败';}
+        try{d.textContent=decodeURIComponent(escape(atob(t)));}catch(_){d.textContent='⚠️ 解码失败';}};
+      i.addEventListener('input',run);
+      $('#b64C',c).addEventListener('click',()=>{copyText(e.textContent,'已复制编码结果');vibrate(6);});
+    }
+  },
+
+  /* ---------- 18. 正则测试 ---------- */
+  regex:{
+    name:'正则测试', icon:'fa-magnifying-glass',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-pen"></i>正则表达式</label>
+        <input type="text" id="rgP" placeholder="例如 \\d+" />
+        <label><i class="fas fa-font"></i>测试文本</label>
+        <textarea id="rgT" rows="4" placeholder="输入测试文本"></textarea>
+        <div class="result left placeholder" id="rgR" style="font-size:13px">请填入正则表达式</div>
+        <div class="copy-wrap"><button class="copy-mini" id="rgC"><i class="fas fa-copy"></i>复制结果</button></div>`;
+      const p=$('#rgP',c),t=$('#rgT',c),res=$('#rgR',c);
+      const run=()=>{const pat=p.value;if(!pat){res.className='result left placeholder';res.textContent='请填入正则表达式';return;}
+        res.className='result left';
+        try{const re=new RegExp(pat,'g'),ms=t.value.match(re);
+          if(ms){res.innerHTML='匹配到 <b class="ok">'+ms.length+'</b> 个结果：<br>'+ms.map((m,i)=>'<span class="ok">'+(i+1)+'.</span> '+m.replace(/</g,'&lt;')).join('<br>');}
+          else res.textContent='无匹配结果';
+        }catch(e){res.innerHTML='<span class="err">⚠️ 无效正则：'+e.message.replace(/</g,'&lt;')+'</span>';}};
+      p.addEventListener('input',run);t.addEventListener('input',run);
+      $('#rgC',c).addEventListener('click',()=>{copyText(res.textContent,'已复制结果');vibrate(6);});
+    }
+  },
+
+  /* ---------- 19. Markdown 预览 ---------- */
+  markdown:{
+    name:'Markdown 预览', icon:'fa-file-lines',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-pen"></i>输入 Markdown</label>
+        <textarea id="mdI" rows="6" placeholder="输入 Markdown，实时预览"></textarea>
+        <div class="result md-preview placeholder" id="mdR">输入 Markdown 后实时预览</div>`;
+      const i=$('#mdI',c),res=$('#mdR',c);
+      const run=()=>{const t=i.value.trim();if(!t){res.className='result md-preview placeholder';res.textContent='输入 Markdown 后实时预览';return;}
+        res.className='result md-preview';
+        let h=i.value
+        .replace(/^### (.*)$/gm,'<h3>$1</h3>').replace(/^## (.*)$/gm,'<h2>$1</h2>').replace(/^# (.*)$/gm,'<h1>$1</h1>')
+        .replace(/^\- (.*)$/gm,'<li>$1</li>').replace(/^\d+\. (.*)$/gm,'<li>$1</li>')
+        .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>')
+        .replace(/\[(.*?)\]\((.*?)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
+        .replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>').replace(/`(.*?)`/g,'<code>$1</code>')
+        .replace(/\n/g,'<br>');
+        h=h.replace(/(<li>.*<\/li>)/g,'<ul>$1</ul>');
+        res.innerHTML=h;};
+      i.addEventListener('input',run);
+    }
+  },
+
+  /* ---------- 20. 哈希生成（新增） ---------- */
+  hash:{
+    name:'哈希生成', icon:'fa-hashtag',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-pen"></i>输入文本</label>
+        <textarea id="hI" rows="3" placeholder="输入文本，实时生成哈希"></textarea>
+        <div class="segmented" id="hSeg" data-segs="3">
+          <div class="seg-thumb" id="hThumb"></div>
+          <button class="active" data-alg="md5">MD5</button>
+          <button data-alg="sha1">SHA-1</button>
+          <button data-alg="sha256">SHA-256</button>
+        </div>
+        <div class="result left placeholder hash-result" id="hR">请填入文本</div>
+        <div class="copy-wrap"><button class="copy-mini" id="hC"><i class="fas fa-copy"></i>复制哈希</button></div>`;
+      const i=$('#hI',c),res=$('#hR',c);
+      let cur='md5';
+      const thumb=$('#hThumb',c),segBtns=$$('.segmented button',c);
+      const moveT=()=>{const idx=cur==='md5'?0:cur==='sha1'?1:2;thumb.style.transform='translateX('+(idx*100)+'%)';};
+      /* MD5（标准实现） */
+      function md5(s){function rotl(x,c){return(x<<c)|(x>>>(32-c));}function add(x,y){const l=(x&0xffff)+(y&0xffff);return(((x>>16)+(y>>16)+(l>>16))<<16)|(l&0xffff);}
+        const K=[0xd76aa478,0xe8c7b756,0x242070db,0xc1bdceee,0xf57c0faf,0x4787c62a,0xa8304613,0xfd469501,0x698098d8,0x8b44f7af,0xffff5bb1,0x895cd7be,0x6b901122,0xfd987193,0xa679438e,0x49b40821,0xf61e2562,0xc040b340,0x265e5a51,0xe9b6c7aa,0xd62f105d,0x02441453,0xd8a1e681,0xe7d3fbc8,0x21e1cde6,0xc33707d6,0xf4d50d87,0x455a14ed,0xa9e3e905,0xfcefa3f8,0x676f02d9,0x8d2a4c8a,0xfffa3942,0x8771f681,0x6d9d6122,0xfde5380c,0xa4beea44,0x4bdecfa9,0xf6bb4b60,0xbebfbc70,0x289b7ec6,0xeaa127fa,0xd4ef3085,0x04881d05,0xd9d4d039,0xe6db99e5,0x1fa27cf8,0xc4ac5665,0xf4292244,0x432aff97,0xab9423a7,0xfc93a039,0x655b59c3,0x8f0ccc92,0xffeff47d,0x85845dd1,0x6fa87e4f,0xfe2ce6e0,0xa3014314,0x4e0811a1,0xf7537e82,0xbd3af235,0x2ad7d2bb,0xeb86d391];
+        const S=[7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
+        let a0=0x67452301,b0=0xefcdab89,c0=0x98badcfe,d0=0x10325476;
+        const bytes=unescape(encodeURIComponent(s)),len=bytes.length;
+        const msg=[];for(let i=0;i<len;i++)msg.push(bytes.charCodeAt(i));
+        const bitLen=len*8,padLen=((bitLen+8)>>6<<6)+56;msg.push(0x80);
+        while(msg.length%64!==56)msg.push(0);
+        for(let i=0;i<8;i++)msg.push((bitLen>>>(8*i))&0xff);
+        for(let off=0;off<msg.length;off+=64){
+          const M=[];for(let i=0;i<16;i++)M.push(msg[off+i*4]|(msg[off+i*4+1]<<8)|(msg[off+i*4+2]<<16)|(msg[off+i*4+3]<<24));
+          let A=a0,B=b0,C=c0,D=d0;
+          for(let i=0;i<64;i++){
+            let F,g;
+            if(i<16){F=(B&C)|(~B&D);g=i;}
+            else if(i<32){F=(D&B)|(~D&C);g=(5*i+1)%16;}
+            else if(i<48){F=B^C^D;g=(3*i+5)%16;}
+            else{F=C^(B|~D);g=(7*i)%16;}
+            F=add(add(A,F),add(K[i],M[g]));const tmp=D;D=C;C=B;B=add(B,rotl(F,S[i]));A=tmp;
+          }
+          a0=add(a0,A);b0=add(b0,B);c0=add(c0,C);d0=add(d0,D);
+        }
+        const hex=n=>{let h=n.toString(16);while(h.length<8)h='0'+h;return h;};
+        return hex(a0)+hex(b0)+hex(c0)+hex(d0);
+      }
+      const run=()=>{
+        const txt=i.value;
+        if(!txt.trim()){res.className='result left placeholder hash-result';res.textContent='请填入文本';return;}
+        res.className='result left hash-result';
+        if(cur==='md5'){res.textContent=md5(txt);return;}
+        const alg=cur==='sha1'?'SHA-1':'SHA-256';
+        crypto.subtle.digest(alg,new TextEncoder().encode(txt)).then(buf=>{
+          res.textContent=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+        }).catch(()=>{res.textContent='⚠️ 仅支持 HTTPS 环境';});
+      };
+      i.addEventListener('input',run);
+      segBtns.forEach(b=>b.addEventListener('click',()=>{segBtns.forEach(x=>x.classList.remove('active'));b.classList.add('active');cur=b.dataset.alg;moveT();run();vibrate(6);}));
+      $('#hC',c).addEventListener('click',()=>{copyText(res.textContent,'已复制哈希');vibrate(6);});
+      requestAnimationFrame(moveT);
+    }
+  },
+
+  /* ---------- 21. 文本差异对比 ---------- */
+  diff:{
+    name:'文本差异', icon:'fa-code-compare',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-file-alt"></i>原始文本</label>
+        <textarea id="dO" rows="3" placeholder="原始文本"></textarea>
+        <label><i class="fas fa-file-alt"></i>新文本</label>
+        <textarea id="dN" rows="3" placeholder="新文本"></textarea>
+        <div class="result left placeholder" id="dR" style="padding:12px">请填入两段文本</div>
+        <div class="copy-wrap"><button class="copy-mini" id="dC"><i class="fas fa-copy"></i>复制差异</button></div>`;
+      const o=$('#dO',c),n=$('#dN',c),res=$('#dR',c);
+      const run=()=>{if(!o.value.trim()&&!n.value.trim()){res.className='result left placeholder';res.textContent='请填入两段文本';return;}
+        res.className='result left';
+        const ol=o.value.split('\n'),nl=n.value.split('\n');let out='';const mx=Math.max(ol.length,nl.length);
+        for(let i=0;i<mx;i++){const a=ol[i]||'',b=nl[i]||'';if(a===b)out+='<div class="diff-unchanged">'+a.replace(/</g,'&lt;')+'</div>';else{if(a)out+='<div class="diff-removed">− '+a.replace(/</g,'&lt;')+'</div>';if(b)out+='<div class="diff-added">+ '+b.replace(/</g,'&lt;')+'</div>';}}
+        res.innerHTML=out||'无差异';};
+      o.addEventListener('input',run);n.addEventListener('input',run);
+      $('#dC',c).addEventListener('click',()=>{copyText(res.textContent,'已复制差异');vibrate(6);});
+    }
+  },
+
+  /* ---------- 22. 密码强度 ---------- */
+  passwordStrength:{
+    name:'密码强度', icon:'fa-shield',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-lock"></i>输入密码</label>
+        <input type="text" id="pwI" placeholder="输入密码" />
+        <div class="pwd-meter"><span></span><span></span><span></span><span></span></div>
+        <div class="result placeholder" id="pwS" style="font-size:15px">输入密码检测强度</div>
+        <div class="result left placeholder" id="pwD" style="font-size:13px;line-height:1.8">将展示各项检测明细</div>`;
+      const i=$('#pwI',c),s=$('#pwS',c),d=$('#pwD',c),m=$$('.pwd-meter span',c);
+      let tid=null;
+      const check=()=>{const p=i.value;if(!p){s.className='result placeholder';s.textContent='输入密码检测强度';d.className='result left placeholder';d.textContent='将展示各项检测明细';m.forEach(x=>{x.classList.remove('on');x.className=x.className.replace(/\blv\d/,'').trim();});return;}
+        s.className='result';d.className='result left';
+        let sc=0,fb=[];
+        if(p.length>=8){sc++;fb.push('<span class="ok">✓ 长度 ≥ 8</span>');}else fb.push('<span class="err">✗ 长度 < 8</span>');
+        if(/[a-z]/.test(p)&&/[A-Z]/.test(p)){sc++;fb.push('<span class="ok">✓ 含大小写</span>');}else fb.push('<span class="err">✗ 缺大小写</span>');
+        if(/\d/.test(p)){sc++;fb.push('<span class="ok">✓ 含数字</span>');}else fb.push('<span class="err">✗ 缺数字</span>');
+        if(/[^a-zA-Z0-9]/.test(p)){sc++;fb.push('<span class="ok">✓ 含特殊字符</span>');}else fb.push('<span class="err">✗ 缺特殊字符</span>');
+        const lv=sc>=4?'强':sc>=3?'中':'弱';
+        const col=sc>=4?'var(--green)':sc>=3?'var(--orange)':'var(--red)';
+        s.textContent=lv;s.style.color=col;d.innerHTML=fb.join('<br>');
+        m.forEach((x,idx)=>{x.classList.toggle('on',idx<sc);x.className=x.className.replace(/\blv\d/,'').trim();if(idx<sc)x.classList.add('lv'+sc);});};
+      i.addEventListener('input',()=>{clearTimeout(tid);tid=setTimeout(check,150);});
+      c._cleanup=()=>clearTimeout(tid);
+    }
+  },
+
+  /* ---------- 23. 二维码 ---------- */
+  qr:{
+    name:'二维码', icon:'fa-qrcode',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-link"></i>文本内容</label>
+        <input type="text" id="qI" placeholder="输入网址或文本，回车生成" />
+        <button class="btn-primary" id="qB"><i class="fas fa-qrcode"></i>生成二维码</button>
+        <div class="result qr-wrap" id="qWrap" style="display:none"><canvas id="qC" width="200" height="200"></canvas><span class="text-muted"><i class="fas fa-camera"></i>扫码访问</span></div>
+        <div class="result placeholder" id="qTip" style="font-size:14px">请填入文本内容</div>
+        <div class="copy-wrap"><button class="copy-mini" id="qC2"><i class="fas fa-copy"></i>复制内容</button></div>`;
+      const i=$('#qI',c),cv=$('#qC',c),wrap=$('#qWrap',c),tip=$('#qTip',c);
+      let cur='';
+      const gen=()=>{const txt=i.value.trim();if(!txt){tip.className='result placeholder';tip.style.display='';wrap.style.display='none';return;}
+        tip.style.display='none';wrap.className='result qr-wrap';cur=txt;
+        const img=new Image();img.crossOrigin='anonymous';
+        img.onload=()=>{const x=cv.getContext('2d');cv.width=200;cv.height=200;x.clearRect(0,0,200,200);x.drawImage(img,0,0,200,200);};
+        img.onerror=()=>{const x=cv.getContext('2d');cv.width=200;cv.height=200;x.fillStyle='#f0f0f0';x.fillRect(0,0,200,200);x.fillStyle='#999';x.font='14px sans-serif';x.textAlign='center';x.fillText('加载失败',100,100);};
+        img.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(txt);};
+      $('#qB',c).addEventListener('click',()=>{gen();vibrate(6);});
+      i.addEventListener('keydown',e=>{if(e.key==='Enter')gen()});
+      $('#qC2',c).addEventListener('click',()=>{copyText(cur,cur?'已复制内容':'请先生成二维码');vibrate(6);});
+    }
+  },/* ---------- 24. 图片转 Base64 ---------- */
+  imageToBase64:{
+    name:'图片转 Base64', icon:'fa-image',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-upload"></i>选择图片</label>
+        <div class="file-input-wrapper">
+          <span class="file-label" id="fL"><i class="fas fa-cloud-arrow-up"></i>点击选择图片</span>
+          <input type="file" id="fI" accept="image/*" />
+        </div>
+        <div class="result left placeholder" id="fR" style="font-size:11px;word-break:break-all;max-height:180px;overflow-y:auto">请先选择图片</div>
+        <div class="copy-wrap"><button class="copy-mini" id="fC"><i class="fas fa-copy"></i>复制 Base64</button></div>`;
+      const fi=$('#fI',c),fl=$('#fL',c),res=$('#fR',c);
+      let cur='';
+      const conv=()=>{const f=fi.files[0];if(!f){res.className='result left placeholder';res.textContent='请先选择图片';return;}
+        const rd=new FileReader();rd.onload=e=>{cur=e.target.result;res.className='result left';res.textContent=cur;vibrate(6);};
+        rd.onerror=()=>{res.className='result left placeholder';res.textContent='读取失败';};rd.readAsDataURL(f);};
+      fi.addEventListener('change',()=>{fl.innerHTML=fi.files.length?'<i class="fas fa-circle-check" style="color:var(--green)"></i> '+fi.files[0].name:'<i class="fas fa-cloud-arrow-up"></i>点击选择图片';conv();});
+      $('#fC',c).addEventListener('click',()=>{if(!cur){toast('请先选择图片');return;}copyText(cur,'已复制 Base64');vibrate(6);});
+    }
+  },/* ---------- 25. 时间戳转换 ---------- */
+  timestamp:{
+    name:'时间戳转换', icon:'fa-clock',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-clock"></i>Unix 时间戳 (秒)</label>
+        <input type="number" id="tI" placeholder="例如 1754000000">
+        <div class="result placeholder" id="tR">输入时间戳后实时转换</div>
+        <hr class="sep">
+        <label><i class="fas fa-calendar"></i>日期时间</label>
+        <input type="datetime-local" id="tD">
+        <div class="result placeholder" id="tR2">选择日期时间后实时转换</div>
+        <div class="copy-wrap"><button class="copy-mini" id="tC"><i class="fas fa-copy"></i>复制结果</button></div>`;
+      const ti=$('#tI',c),tr=$('#tR',c),di=$('#tD',c),tr2=$('#tR2',c);
+      let last='';
+      const conv1=()=>{const ts=parseInt(ti.value);if(!ti.value.trim()||isNaN(ts)){tr.className='result placeholder';tr.textContent='输入时间戳后实时转换';return;}
+        tr.className='result';tr.textContent=new Date(ts*1000).toLocaleString();last=tr.textContent;};
+      const conv2=()=>{const d=new Date(di.value);if(!di.value||isNaN(d)){tr2.className='result placeholder';tr2.textContent='选择日期时间后实时转换';return;}
+        tr2.className='result';tr2.textContent=Math.floor(d.getTime()/1000)+' (秒)';last=tr2.textContent;};
+      ti.addEventListener('input',conv1);
+      di.addEventListener('change',conv2);
+      $('#tC',c).addEventListener('click',()=>{copyText(last,last?'已复制结果':'请先转换');vibrate(6);});
+    }
+  },/* ---------- 26. 日期计算 ---------- */
+  date:{
+    name:'日期计算', icon:'fa-calendar-days',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-play"></i>开始日期</label>
+        <input type="date" id="dS">
+        <label><i class="fas fa-stop"></i>结束日期</label>
+        <input type="date" id="dE">
+        <div class="result placeholder" id="dR2">请选择开始与结束日期</div>
+        <button class="btn-primary btn-purple" id="dA"><i class="fas fa-plus"></i>推算日期 (+7 天)</button>
+        <div class="result placeholder" id="dAR">选择开始日期后点击推算</div>
+        <div class="copy-wrap"><button class="copy-mini" id="dC2"><i class="fas fa-copy"></i>复制结果</button></div>`;
+      const s=$('#dS',c),e=$('#dE',c),res=$('#dR2',c),aRes=$('#dAR',c);
+      let last='';
+      const calc=()=>{if(!s.value||!e.value){res.className='result placeholder';res.textContent='请选择开始与结束日期';return;}
+        const d1=new Date(s.value),d2=new Date(e.value);if(isNaN(d1)||isNaN(d2)){res.className='result placeholder';res.textContent='⚠️ 请选择有效日期';return;}
+        res.className='result';const days=Math.floor(Math.abs(d2-d1)/86400000);res.innerHTML='📅 相差 <b>'+days+'</b> 天';last='相差 '+days+' 天';};
+      const add7=()=>{const d=new Date(s.value);if(!s.value||isNaN(d)){aRes.className='result placeholder';aRes.textContent='⚠️ 请先选择开始日期';return;}
+        d.setDate(d.getDate()+7);aRes.className='result';aRes.innerHTML='📅 +7 天：<b>'+d.toISOString().split('T')[0]+'</b>';last='+7 天：'+d.toISOString().split('T')[0];vibrate(6);};
+      s.addEventListener('change',calc);e.addEventListener('change',calc);
+      $('#dA',c).addEventListener('click',add7);
+      $('#dC2',c).addEventListener('click',()=>{copyText(last,last?'已复制结果':'请先计算');vibrate(6);});
+    }
+  },/* ---------- 27. 倒计时 ---------- */
+  countdown:{
+    name:'倒计时', icon:'fa-hourglass-end',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-calendar-check"></i>目标日期</label>
+        <input type="datetime-local" id="cdT">
+        <div class="result placeholder" id="cdR" style="font-size:15px">请选择目标时间开始倒计时</div>`;
+      const t=$('#cdT',c),res=$('#cdR',c);let iv=null;
+      const stop=()=>{if(iv){clearInterval(iv);iv=null;}};
+      const upd=()=>{const now=new Date(),td=new Date(t.value);if(!t.value||isNaN(td)){res.className='result placeholder';res.textContent='请选择目标时间开始倒计时';stop();return;}
+        res.className='result';const diff=td-now;if(diff<=0){res.innerHTML='<span class="ok">🎉 倒计时结束！</span>';stop();return;}
+        const days=Math.floor(diff/86400000),h=Math.floor(diff/3600000)%24,m=Math.floor(diff/60000)%60,s=Math.floor(diff/1000)%60;
+        res.innerHTML='⏳ <b>'+days+'</b> 天 <b>'+h+'</b> 时 <b>'+m+'</b> 分 <b>'+s+'</b> 秒';};
+      t.addEventListener('change',()=>{stop();upd();iv=setInterval(upd,1000);vibrate(6);});
+      c._cleanup=stop;
+    }
+  },/* ---------- 28. 文本工具 ---------- */
+  text:{
+    name:'文本工具', icon:'fa-pen-to-square',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-font"></i>输入文本</label>
+        <textarea id="txI" rows="3" placeholder="输入文本后选择操作"></textarea>
+        <div class="btn-row">
+          <button class="btn-primary" data-a="count"><i class="fas fa-list"></i>统计</button>
+          <button class="btn-primary btn-purple" data-a="reverse"><i class="fas fa-arrow-right-arrow-left"></i>反转</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary btn-green" data-a="upper"><i class="fas fa-arrow-up"></i>大写</button>
+          <button class="btn-primary btn-orange" data-a="lower"><i class="fas fa-arrow-down"></i>小写</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" data-a="encode"><i class="fas fa-lock"></i>Base64 编码</button>
+          <button class="btn-primary btn-purple" data-a="decode"><i class="fas fa-unlock"></i>Base64 解码</button>
+        </div>
+        <div class="result left placeholder" id="txR" style="font-size:14px">输入文本后选择操作</div>
+        <div class="copy-wrap"><button class="copy-mini" id="txC"><i class="fas fa-copy"></i>复制结果</button></div>`;
+      const i=$('#txI',c),res=$('#txR',c);
+      let last='';
+      const setRes=t=>{if(t){res.className='result left';res.textContent=t;last=t;}else{res.className='result left placeholder';res.textContent='输入文本后选择操作';last='';}};
+      const acts={
+        count:()=>{const t=i.value;if(!t)return setRes('');setRes('📊 字符 '+t.length+' · 单词 '+(t.trim()?t.trim().split(/\s+/).length:0)+' · 行 '+t.split('\n').length);},
+        reverse:()=>{i.value?setRes(i.value.split('').reverse().join('')):setRes('');},
+        upper:()=>{i.value?setRes(i.value.toUpperCase()):setRes('');},
+        lower:()=>{i.value?setRes(i.value.toLowerCase()):setRes('');},
+        encode:()=>{if(!i.value)return setRes('');try{setRes(btoa(unescape(encodeURIComponent(i.value))));}catch(_){setRes('⚠️ 编码失败');}},
+        decode:()=>{if(!i.value)return setRes('');try{setRes(decodeURIComponent(escape(atob(i.value))));}catch(_){setRes('⚠️ 解码失败');}}
+      };
+      $$('button[data-a]',c).forEach(b=>b.addEventListener('click',()=>{acts[b.dataset.a]();vibrate(6);}));
+      $('#txC',c).addEventListener('click',()=>{copyText(last,last?'已复制结果':'请先处理文本');vibrate(6);});
+    }
+  },/* ---------- 29. 字数统计 ---------- */
+  wordCount:{
+    name:'字数统计', icon:'fa-align-left',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-pen"></i>输入文本</label>
+        <textarea id="wI" rows="5" placeholder="输入文本，实时统计"></textarea>
+        <div class="result left placeholder" id="wR" style="font-size:14px;line-height:2">请填入文本</div>
+        <div class="copy-wrap"><button class="copy-mini" id="wC"><i class="fas fa-copy"></i>复制统计</button></div>`;
+      const i=$('#wI',c),res=$('#wR',c);
+      const run=()=>{const t=i.value;if(!t.trim()){res.className='result left placeholder';res.textContent='请填入文本';return;}
+        res.className='result left';
+        const items=[['总字符数',t.length],['不含空格',t.replace(/\s/g,'').length],['单词数',t.trim()?t.trim().split(/\s+/).length:0],['行数',t.split('\n').length],['中文字符',(t.match(/[\u4e00-\u9fa5]/g)||[]).length],['英文字母',(t.match(/[a-zA-Z]/g)||[]).length],['数字',(t.match(/\d/g)||[]).length],['标点符号',(t.match(/[，。！？；：、""''（）\.,!?;:""''()]/g)||[]).length]];
+        res.innerHTML=items.map(x=>'<b>'+x[0]+'</b>　'+x[1]).join('<br>');};
+      i.addEventListener('input',run);
+      $('#wC',c).addEventListener('click',()=>{copyText(res.textContent,'已复制统计');vibrate(6);});
+    }
+  },
+
+  /* ---------- 30. 颜色选择器 ---------- */
+  colorPicker:{
+    name:'颜色选择器', icon:'fa-eye-dropper',
+    render(c){
+      c.innerHTML = `
+        <label><i class="fas fa-palette"></i>选择颜色</label>
+        <div style="display:flex;align-items:center;gap:16px">
+          <input type="color" id="cpI" value="#007aff" style="width:64px;height:64px;border:none;padding:0;border-radius:16px;cursor:pointer;background:transparent">
+          <div style="flex:1;font-size:14px;line-height:1.9" id="cpT"><b>HEX:</b> <span id="cpH">#007aff</span><br><b>RGB:</b> <span id="cpR">rgb(0,122,255)</span><br><b>HSL:</b> <span id="cpS">hsl(211,100%,50%)</span></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" id="cpB"><i class="fas fa-copy"></i>复制 HEX</button>
+          <button class="btn-primary btn-purple" id="cpB2"><i class="fas fa-copy"></i>复制 RGB</button>
+          <button class="btn-primary btn-orange" id="cpB3"><i class="fas fa-copy"></i>复制 HSL</button>
+        </div>
+        <div class="result placeholder" id="cpRes">当前颜色将实时展示</div>`;
+      const p=$('#cpI',c),h=$('#cpH',c),r=$('#cpR',c),s=$('#cpS',c),res=$('#cpRes',c);
+      const hsl=(x,y,z)=>{x/=255;y/=255;z/=255;const mx=Math.max(x,y,z),mn=Math.min(x,y,z);let hh,ss,l=(mx+mn)/2;if(mx===mn){hh=ss=0;}else{const d=mx-mn;ss=l>.5?d/(2-mx-mn):d/(mx+mn);if(mx===x)hh=((y-z)/d+(y<z?6:0))/6;else if(mx===y)hh=((z-x)/d+2)/6;else hh=((x-y)/d+4)/6;}return[hh*360,ss*100,l*100];};
+      const upd=hex=>{h.textContent=hex;const rr=parseInt(hex.slice(1,3),16),gg=parseInt(hex.slice(3,5),16),bb=parseInt(hex.slice(5,7),16);r.textContent='rgb('+rr+','+gg+','+bb+')';const hs=hsl(rr,gg,bb);s.textContent='hsl('+hs[0].toFixed(0)+','+hs[1].toFixed(0)+'%,'+hs[2].toFixed(0)+'%)';res.className='result';res.innerHTML='<span class="color-chip" style="background:'+hex+'"></span><b>'+hex+'</b> · '+r.textContent;};
+      p.addEventListener('input',e=>upd(e.target.value));
+      $('#cpB',c).addEventListener('click',()=>{copyText(p.value,'已复制 HEX');vibrate(8);});
+      $('#cpB2',c).addEventListener('click',()=>{copyText(r.textContent,'已复制 RGB');vibrate(8);});
+      $('#cpB3',c).addEventListener('click',()=>{copyText(s.textContent,'已复制 HSL');vibrate(8);});
+      upd('#007aff');
+    }
+  }
+};
+
+/* ============================================================
+   分组
+   ============================================================ */
+const GROUPS = {
+  common:['calculator','scientific','timer','pomodoro','bmi','unit','currency'],
+  calc:['baseConvert','color','random','coordConvert','mortgage','age'],
+  dev:['jsonFormat','uuid','urlEncode','base64','regex','markdown','hash','diff'],
+  security:['passwordStrength','qr','imageToBase64'],
+  time:['timestamp','date','countdown'],
+  design:['text','wordCount','colorPicker']
+};
+const GRID_MAP={common:'toolGridCommon',calc:'toolGridCalc',dev:'toolGridDev',security:'toolGridSecurity',time:'toolGridTime',design:'toolGridDesign'};
+
+/* ============================================================
+   DOM
+   ============================================================ */
+const panel=$('#sharedPanel'),overlay=$('#panelOverlay'),panelIcon=$('#panelIcon'),panelTitle=$('#panelTitle'),
+      panelBody=$('#panelBody'),panelClose=$('#panelClose'),resetBtn=$('#resetAllBtn'),
+      searchInput=$('#searchInput'),searchClear=$('#searchClear'),emptyTip=$('#emptyTip');
+
+let currentToolId=null,currentCardEl=null,isOpen=false,cleanupFn=null,hiddenCard=null,panelAnim=null,bodyAnim=null;
+
+
+/* 工具一句话描述（卡片副标题，增强苹果味） */
+const DESC={
+  calculator:'四则与括号运算', scientific:'函数与科学计算', timer:'毫秒级精确计时', pomodoro:'专注25分钟工作法',
+  bmi:'身高体重评估', unit:'长度重量温度换算', currency:'多币种汇率换算', baseConvert:'二八十六进制互转',
+  color:'HEX·RGB·HSL 转换', random:'随机数·密码·颜色', coordConvert:'十进制度数转度分秒', mortgage:'月供与利息测算',
+  age:'周岁与生日倒计时', jsonFormat:'JSON 格式化与压缩', uuid:'RFC4122 v4 生成', urlEncode:'URL 编码与解码',
+  base64:'Base64 编解码', regex:'正则匹配与测试', markdown:'Markdown 实时预览', hash:'MD5/SHA 系列摘要',
+  diff:'文本逐行差异对比', passwordStrength:'密码强度检测', qr:'文本生成二维码', imageToBase64:'图片转 DataURL',
+  timestamp:'Unix 时间戳互转', date:'日期间隔与推算', countdown:'目标日期倒计时', text:'统计·反转·大小写',
+  wordCount:'多维文本统计', colorPicker:'取色与格式转换'
+};
+
+/* ============================================================
+   Toast
+   ============================================================ */
+let toastTimer=null;
+function toast(msg){
+  const t=$('#toast');t.innerHTML='<i class="fas fa-circle-check"></i>'+msg;t.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* 复制文本：优先 Clipboard API，失败回退 execCommand（file:// 环境也能用） */
+function copyText(text, tip){
+  text=String(text==null?'':text);
+  const done=()=>toast(tip||'已复制');
+  const fail=()=>toast('复制失败，请手动选择');
+  const fallback=()=>{
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=text;ta.style.position='fixed';ta.style.opacity='0';ta.style.pointerEvents='none';
+      document.body.appendChild(ta);ta.focus();ta.select();
+      const ok=document.execCommand('copy');
+      document.body.removeChild(ta);
+      ok?done():fail();
+    }catch(_){fail();}
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(fallback);
+  }else fallback();
+}
+
+/* ============================================================
+   卡片渲染（无收藏/最近，stagger 入场）
+   ============================================================ */
+function makeCard(id){
+  const tool=TOOLS[id];
+  const card=document.createElement('div');
+  card.className='tool-card';card.dataset.tool=id;
+  card.innerHTML='<span class="icon" style="background:'+(ICON_COLORS[id]||'#0a84ff')+'"><i class="fas '+tool.icon+'"></i></span>'
+    +'<span class="name">'+tool.name+'</span><span class="desc">'+(DESC[id]||'点击打开')+'</span>';
+  card.addEventListener('click',()=>openTool(id,card));
+  return card;
+}
+function renderCards(){
+  for(const [group,ids] of Object.entries(GROUPS)){
+    const grid=$('#'+GRID_MAP[group]);if(!grid)continue;
+    grid.innerHTML='';
+    ids.forEach((id,idx)=>{
+      const card=makeCard(id);
+      card.style.setProperty('--i',idx);
+      card.classList.add('enter');
+      grid.appendChild(card);
+    });
+  }
+}
+
+/* ============================================================
+   共享元素过渡 —— 真实尺寸插值（WAAPI，可中断/重定向）
+   面板 left:0;top:0，全部几何由 transform 精确控制。
+   动画只动 width/height/transform/borderRadius：
+     · 真实宽高变化（非 scale 贴图缩放），圆角独立插值不变形
+     · position:fixed + contain:layout paint，重排范围仅面板子树
+     · 动画期间关闭 backdrop-filter，保证帧率
+     · 任意时刻 cancel 并从当前中间状态重定向 → 完美打断
+   ============================================================ */
+const SPRING='cubic-bezier(.32,.72,0,1)';
+const OPEN_MS=reduced?1:520;
+const CLOSE_MS=reduced?1:420;
+
+function panelSize(){
+  const winW=window.innerWidth,winH=window.innerHeight;
+  let w=Math.min(winW-32,440),h=Math.min(winH*0.8,640);
+  if(winW>=768){w=Math.min(winW-64,640);h=Math.min(winH*0.78,700);}
+  if(winW>=1200){w=Math.min(winW-96,840);h=Math.min(winH*0.76,760);}
+  return {w:Math.round(w),h:Math.round(h)};
+}
+
+function readPanelState(){
+  const cs=getComputedStyle(panel);
+  const m=new DOMMatrixReadOnly(cs.transform);
+  return {
+    w:parseFloat(cs.width)||0,
+    h:parseFloat(cs.height)||0,
+    x:m.m41||0, y:m.m42||0,
+    br:parseFloat(cs.borderRadius)||28
+  };
+}
+function setPanelVisual(s){
+  panel.style.width=s.w+'px';
+  panel.style.height=s.h+'px';
+  panel.style.transform='translate('+s.x+'px,'+s.y+'px)';
+  panel.style.borderRadius=s.br+'px';
+}
+function stopPanelAnim(){
+  if(panelAnim){ try{panelAnim.cancel();}catch(_){} panelAnim=null; }
+}
+/* 并行动画图层：主面板 z-index 递增，最新展开永远在最上层 */
+let layerIndex=100;
+let ghostLayer=80;
+let closingTo=null; /* 关闭动画目标态（被新展开抢占时交给幽灵面板） */
+function setPanelZ(){ layerIndex=Math.max(layerIndex+2,ghostLayer+10); panel.style.zIndex=String(layerIndex); }
+
+/* 并行动画：把一段「当前态 → 收缩到卡片」的动画交给独立幽灵面板在低层继续播放 */
+function spawnGhost(from,to,dur){
+  const g=document.createElement('div');
+  g.className='shared-panel ghost';
+  g.style.zIndex=String(ghostLayer++);
+  g.style.width=from.w+'px';g.style.height=from.h+'px';
+  g.style.transform='translate('+from.x+'px,'+from.y+'px)';
+  g.style.borderRadius=from.br+'px';
+  g.style.opacity='1';
+  document.body.appendChild(g);
+  let anim;
+  try{
+    anim=g.animate([
+      {width:from.w+'px',height:from.h+'px',transform:'translate('+from.x+'px,'+from.y+'px)',borderRadius:from.br+'px'},
+      {width:to.w+'px',height:to.h+'px',transform:'translate('+to.x+'px,'+to.y+'px)',borderRadius:to.br+'px'}
+    ],{duration:dur,easing:SPRING,fill:'both'});
+  }catch(_){ g.remove(); return; }
+  anim.onfinish=()=>{ g.remove(); };
+  anim.oncancel=()=>{ g.remove(); };
+}
+
+function animatePanel(from,to,dur,onDone){
+  stopPanelAnim();
+  setPanelVisual(from);
+  panel.classList.add('animating');
+  let anim;
+  try{
+    anim=panel.animate([
+      {width:from.w+'px',height:from.h+'px',transform:'translate('+from.x+'px,'+from.y+'px)',borderRadius:from.br+'px'},
+      {width:to.w+'px',height:to.h+'px',transform:'translate('+to.x+'px,'+to.y+'px)',borderRadius:to.br+'px'}
+    ],{duration:dur,easing:SPRING,fill:'both'});
+  }catch(_){
+    /* 防御：动画异常时直接落到目标态，绝不卡在起始 */
+    panel.classList.remove('animating');
+    setPanelVisual(to);
+    if(onDone)onDone();
+    return;
+  }
+  panelAnim=anim;
+  anim.onfinish=()=>{
+    panelAnim=null;
+    panel.classList.remove('animating');
+    setPanelVisual(to);
+    if(onDone)onDone();
+  };
+  anim.oncancel=()=>{panelAnim=null;panel.classList.remove('animating');};
+  return anim;
+}
+
+/* 正文随展开同步淡入（无上浮位移，一体化） */
+function runBodyFade(dur){
+  stopBodyAnim();
+  panelBody.style.opacity='0';
+  try{
+    bodyAnim=panelBody.animate([{opacity:0},{opacity:1}],{duration:dur,easing:'ease-out',fill:'both'});
+    bodyAnim.onfinish=()=>{bodyAnim=null;panelBody.style.opacity='';};
+  }catch(_){panelBody.style.opacity='';}
+}
+function stopBodyAnim(){
+  if(bodyAnim){try{bodyAnim.cancel();}catch(_){}bodyAnim=null;}
+  panelBody.style.opacity='';
+}
+
+/* clip-path 蒙版揭露（参考 v1.2，去掉其 opacity 淡入淡出）：内容随几何展开「慢慢显现」 */
+let bodyClipAnim=null;
+function runBodyClip(open){
+  if(bodyClipAnim){try{bodyClipAnim.cancel();}catch(_){}bodyClipAnim=null;}
+  if(reduced){panelBody.style.clipPath='';return;}
+  const f=open?'inset(38% 14% 38% 14% round 28px)':'inset(0% 0% 0% 0% round 0px)';
+  const t=open?'inset(0% 0% 0% 0% round 0px)':'inset(38% 14% 38% 14% round 28px)';
+  try{
+    bodyClipAnim=panelBody.animate([{clipPath:f},{clipPath:t}],{duration:open?OPEN_MS:Math.max(CLOSE_MS-80,220),easing:SPRING,fill:'both'});
+    bodyClipAnim.onfinish=()=>{bodyClipAnim=null;panelBody.style.clipPath='';};
+  }catch(_){panelBody.style.clipPath='';}
+}
+function stopBodyClip(){
+  if(bodyClipAnim){try{bodyClipAnim.cancel();}catch(_){}bodyClipAnim=null;}
+  panelBody.style.clipPath='';
+}
+
+/* 卡片按压收缩（参考 v1.3：按下卡片先收缩，再展开面板） */
+function pressCard(cardEl){
+  if(!cardEl||!cardEl.classList)return;
+  cardEl.classList.add('pressing');
+  setTimeout(()=>{if(cardEl.classList)cardEl.classList.remove('pressing');},130);
+}
+
+/* 被面板覆盖的卡片管理 */
+function setHiddenCard(card){
+  if(hiddenCard&&hiddenCard!==card){hiddenCard.classList.remove('hidden');}
+  hiddenCard=card||null;
+  if(card)card.classList.add('hidden');
+}
+
+/* 清理面板内工具实例（计时器/监听器等） */
+function cleanupCurrent(){
+  if(cleanupFn){try{cleanupFn();}catch(_){}cleanupFn=null;}
+  if(panelBody._cleanup){try{panelBody._cleanup();}catch(_){}panelBody._cleanup=null;}
+  if(panelBody._cleanup2){try{panelBody._cleanup2();}catch(_){}panelBody._cleanup2=null;}
+}
+
+/* ============================================================
+   打开工具：卡片真实尺寸 → 面板真实尺寸，丝滑展开
+   ============================================================ */
+function cardRectOf(cardEl){
+  const cr=cardEl.getBoundingClientRect();
+  return {w:Math.max(cr.width,60),h:Math.max(cr.height,40),x:cr.left,y:cr.top,br:16};
+}
+function openTool(id,cardEl){
+  const tool=TOOLS[id];if(!tool)return;
+  /* 卡片按压收缩（参考 v1.3：按下先收缩，再展开面板） */
+  pressCard(cardEl);
+
+  const size=panelSize();
+  const winW=window.innerWidth,winH=window.innerHeight;
+  const to={w:size.w,h:size.h,x:(winW-size.w)/2,y:(winH-size.h)/2,br:28};
+
+  let from=null;
+  if(panelAnim && !isOpen && closingTo){
+    /* 并行动画：旧面板正在关闭 → 剩余收缩动画交给幽灵面板在低层继续播放，
+       主面板立即从新卡片展开（最新触发的动画永远在最上层） */
+    const cur=readPanelState();
+    spawnGhost(cur,closingTo,Math.max(CLOSE_MS*0.6,200));
+    closingTo=null;
+    stopPanelAnim();
+    if(cardEl&&cardEl.isConnected) from=cardRectOf(cardEl);
+  }else if(panel.classList.contains('open') && !panel.classList.contains('done-hide')){
+    /* 面板仍可见（展开中/静止被抢占）→ 从当前中间状态重定向展开（可打断） */
+    stopPanelAnim();
+    from=readPanelState();
+  }else if(cardEl&&cardEl.isConnected){
+    from=cardRectOf(cardEl);
+  }
+  /* 防御：from 读取失败（搜索/滚动后卡片 rect 异常等）→ 回退居中起始态，绝不「静止不展开」 */
+  if(!from||from.w<10||from.h<10||isNaN(from.x)||isNaN(from.y)){
+    from={w:size.w*0.4,h:size.h*0.3,x:(winW-size.w*0.4)/2,y:(winH-size.h*0.3)/2,br:28};
+  }
+
+  /* 头部即时更新（动画期间可见） */
+  panelIcon.innerHTML='<i class="fas '+tool.icon+'"></i>';
+  panelIcon.style.background=ICON_COLORS[id]||'#0a84ff';
+  panelTitle.textContent=tool.name;
+
+  currentToolId=id;currentCardEl=cardEl||null;isOpen=true;
+  panel.classList.remove('done-hide');
+  panel.classList.add('open');
+  setPanelZ(); /* 图层递增：最新展开永远在最上层 */
+  overlay.classList.add('active');
+  setHiddenCard(cardEl||null);
+  document.body.style.overflow='hidden';
+
+  /* 正文先行渲染：内容随几何展开「慢慢显现」（clip-path 蒙版揭露 + 同步淡入） */
+  stopBodyClip();
+  cleanupCurrent();
+  panelBody.innerHTML='';
+  panelBody.classList.remove('closing');
+  try{tool.render(panelBody);}catch(_){panelBody.innerHTML='<div class="result placeholder">工具加载异常</div>';}
+  if(typeof panelBody._cleanup==='function')cleanupFn=()=>{try{panelBody._cleanup();}catch(_){}};
+  runBodyFade(reduced?1:Math.min(OPEN_MS,460));
+  runBodyClip(true);
+
+  animatePanel(from,to,OPEN_MS,()=>{
+    /* 动画完成 → 收尾（正文已在同步淡入中） */
+    panelBody.classList.remove('closing');
+  });
+}
+
+/* ============================================================
+   关闭：面板真实尺寸 → 卡片真实尺寸（反向），可被再次打开打断
+   ============================================================ */
+function closePanel(cb){
+  if(!isOpen&&!panelAnim){if(cb)cb();return;}
+  isOpen=false;
+  stopBodyAnim(); /* 取消正文淡入，立即走 .closing 快速淡出 */
+  stopBodyClip();
+  overlay.classList.remove('active');
+  document.body.style.overflow='';
+  panelBody.classList.add('closing');
+
+  const cardEl=currentCardEl;
+  let to;
+  if(cardEl&&cardEl.isConnected){
+    const cr=cardEl.getBoundingClientRect();
+    to={w:Math.max(cr.width,60),h:Math.max(cr.height,40),x:cr.left,y:cr.top,br:16};
+    /* 防御：卡片 rect 异常（隐藏/搜索态）时回退居中收缩，绝不产生 NaN 动画 */
+    if(!isFinite(to.w)||!isFinite(to.h)||!isFinite(to.x)||!isFinite(to.y)||to.w<10||to.h<10){to.x=0;to.y=0;to.w=Math.max(to.w,60);to.h=Math.max(to.h,40);}
+    setHiddenCard(null);
+  }else{
+    const cur=readPanelState();
+    to={w:cur.w*0.4,h:cur.h*0.3,x:cur.x+cur.w*0.3,y:cur.y+cur.h*0.35,br:28};
+  }
+  closingTo=to; /* 并行动画：被新展开抢占时，剩余收缩交给幽灵面板 */
+  const from=readPanelState();
+  runBodyClip(false); /* 蒙版反向收缩，内容随之收拢 */
+  animatePanel(from,to,CLOSE_MS,()=>{
+    closingTo=null;
+    panel.classList.remove('open');
+    panel.classList.add('done-hide');
+    panelBody.classList.remove('closing');
+    panelBody.innerHTML='';
+    cleanupCurrent();
+    currentToolId=null;currentCardEl=null;
+    if(cb)cb();
+  });
+}
+
+/* ============================================================
+   液态玻璃双选项底栏（AndroidLiquidGlass 交互+渲染完整复刻）
+   三层结构：常态 track / accent 着色副本 / 滑动 pill + 手指高光
+   · 按压多级缩放：容器 1→1.07 / 内容 1→1.09 / pill 高光 1→1.39
+   · 拖动 1:1 跟手 + 边缘橡皮筋（0.22 阻力回弹）
+   · 松手四舍五入吸附 + spring 近临界阻尼动画
+   · 速度形变：快速甩动 pill 横向拉伸
+   · 同心圆：底栏 64/32 与 pill/accent 56/28，圆心同垂线
+   ============================================================ */
+const tabBar=$('#tabBar'),tabTrack=$('#tabTrack'),tabAccent=$('#tabAccent'),
+      tabAccentTrack=$('#tabAccentTrack'),tabPill=$('#tabPill'),tabRipple=$('#tabRipple');
+const TABS=[
+  {tab:'common',icon:'fa-th-large',label:'常用'},
+  {tab:'more',icon:'fa-folder',label:'更多'}
+];
+TABS.forEach((t,i)=>{
+  tabTrack.insertAdjacentHTML('beforeend',
+    '<button class="tab-item'+(i===0?' active':'')+'" data-tab="'+t.tab+'" role="tab" aria-selected="'+(i===0)+'">'+
+    '<span class="tab-icon"><i class="fas '+t.icon+'"></i></span><span class="lbl">'+t.label+'</span></button>');
+  tabAccentTrack.insertAdjacentHTML('beforeend',
+    '<button class="tab-item accent" data-tab="'+t.tab+'" tabindex="-1">'+
+    '<span class="tab-icon"><i class="fas '+t.icon+'"></i></span><span class="lbl">'+t.label+'</span></button>');
+});
+const TAB_ITEMS=$$('.tab-item',tabTrack);
+const TAB_COUNT=TAB_ITEMS.length;
+const tabIndexOf=tab=>{for(let i=0;i<TAB_COUNT;i++)if(TAB_ITEMS[i].dataset.tab===tab)return i;return 0;};
+const spring=(stiffness,damping)=>{const w=Math.sqrt(stiffness);return{k:stiffness,c:2*damping*w}};
+const VAL_SPRING=spring(1500,1.1),PRESS_SPRING=spring(800,.85),PRESSED_SCALE=78/56;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rubber=(raw,lo,hi)=>{if(raw<lo)return lo+(raw-lo)*.22;if(raw>hi)return hi+(raw-hi)*.22;return raw};
+function stepSpring(s,target,sp,dt){const a=sp.k*(target-s.v)-sp.c*s.vel;s.vel+=a*dt;s.v+=s.vel*dt;if(Math.abs(s.v-target)<0.00015&&Math.abs(s.vel)<0.001){s.v=target;s.vel=0}}
+const inst={
+  val:{v:0,vel:0},press:{v:0,vel:0},sx:{v:1,vel:0},sy:{v:1,vel:0},
+  targetVal:0,lastIdx:0,dragVel:0,tabW:0,step:0,
+  dragging:false,moved:false,startX:0,lastX:0,startVal:0,lastDX:0,rippleX:null,rippleY:null,active:false
+};
+function measure(){
+  const avail=Math.min(window.innerWidth-32,920);
+  const need=TAB_COUNT*128+(TAB_COUNT-1)*6+8; /* max-tab 128 不变，超宽收缩 */
+  const bw=Math.min(avail,need);
+  tabBar.style.width=bw+'px';
+  const tr=tabTrack.getBoundingClientRect();
+  inst.tabW=(tr.width-(TAB_COUNT-1)*6)/TAB_COUNT;
+  inst.step=inst.tabW+6;
+  tabPill.style.width=inst.tabW+'px';
+  tabAccent.style.width=inst.tabW+'px';
+  tabAccentTrack.style.width=tr.width+'px';
+}
+function update(dt){
+  if(inst.dragging){
+    inst.val.v=rubber(inst.startVal+(inst.lastX-inst.startX)/inst.step,0,TAB_COUNT-1);
+    inst.targetVal=clamp(Math.round(inst.val.v),0,TAB_COUNT-1);
+    inst.dragVel=(inst.lastDX/inst.step)||0;
+    stepSpring(inst.press,1,PRESS_SPRING,dt);
+    stepSpring(inst.sx,PRESSED_SCALE,PRESS_SPRING,dt);
+    stepSpring(inst.sy,PRESSED_SCALE,PRESS_SPRING,dt);
+    return true;
+  }
+  stepSpring(inst.val,inst.targetVal,VAL_SPRING,dt);
+  stepSpring(inst.press,0,PRESS_SPRING,dt);
+  stepSpring(inst.sx,1,PRESS_SPRING,dt);
+  stepSpring(inst.sy,1,PRESS_SPRING,dt);
+  inst.dragVel*=.9;
+  return Math.abs(inst.val.v-inst.targetVal)>0.0003||inst.press.v>0.004||Math.abs(inst.sx.v-1)>0.004;
+}
+function render(){
+  const x=inst.val.v*inst.step,p=inst.press.v;
+  tabBar.style.transform='translateX(-50%) scale('+(1+.07*p)+')';
+  tabTrack.style.transform='scale('+(1+.09*p)+')';
+  const vc=clamp(inst.dragVel*.5,-.2,.2);
+  const sxr=inst.sx.v/(1-vc*.75),syr=inst.sy.v*(1-vc*.25);
+  tabPill.style.transform='translateX('+x+'px) scale('+sxr+','+syr+')';
+  tabPill.style.boxShadow='0 '+(4+10*p)+'px '+(14+14*p)+'px rgba(0,0,0,'+(.10+.08*p)+'), inset 0 0 0 .5px rgba(255,255,255,'+(.24+.16*p)+'), inset 0 -1px 3px rgba(0,0,0,'+(.04+.06*p)+')';
+  tabAccent.style.transform='translateX('+x+'px)';
+  tabAccentTrack.style.transform='translateX('+(-x)+'px) scale('+(1+.09*p)+')';
+  if(p>0.01&&inst.rippleX!=null){
+    tabRipple.style.opacity=Math.min(1,p);
+    tabRipple.style.transform='translate('+(inst.rippleX-75)+'px,'+(inst.rippleY-75)+'px) scale('+(1+.35*p)+')';
+  }else{tabRipple.style.opacity=0}
+  const idx=Math.round(clamp(inst.val.v,0,TAB_COUNT-1));
+  if(idx!==inst.lastIdx){
+    inst.lastIdx=idx;
+    TAB_ITEMS.forEach((it,i)=>{const on=i===idx;it.classList.toggle('active',on);it.setAttribute('aria-selected',on)});
+  }
+}
+let rafId=null,lastT=0,running=false;
+function ensureLoop(){if(!running){running=true;lastT=performance.now();rafId=requestAnimationFrame(loop)}}
+function loop(t){
+  const dt=Math.min(.033,(t-lastT)/1000);lastT=t;
+  inst.active=update(dt);render();
+  if(inst.active){rafId=requestAnimationFrame(loop)}else{running=false}
+}
+/* 面板切换（供 tab 点击 / 重置 / 拖拽吸附调用） */
+function switchTab(tab){
+  TAB_ITEMS.forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  $$('.tab-panel').forEach(p=>p.classList.toggle('active',p.dataset.tab===tab));
+  const idx=tabIndexOf(tab);
+  if(idx>=0){inst.targetVal=idx;inst.active=true;ensureLoop();}
+  if(reduced){$$('.tool-card').forEach(c=>c.style.animation='none');}
+  else{$$('.tab-panel.active .tool-card').forEach((c,i)=>{c.style.animation='none';void c.offsetWidth;c.style.animation='';c.style.setProperty('--i',i);});}
+}
+/* 指针交互：手指/高光/滑块一体跟手 */
+tabBar.addEventListener('pointerdown',e=>{
+  inst.dragging=true;inst.moved=false;
+  inst.startX=inst.lastX=e.clientX;inst.startVal=inst.val.v;inst.lastDX=0;
+  inst.targetVal=clamp(Math.round(inst.val.v),0,TAB_COUNT-1);
+  const br=tabBar.getBoundingClientRect();
+  inst.rippleX=e.clientX-br.left;inst.rippleY=e.clientY-br.top;
+  inst.active=true;ensureLoop();
+  try{tabBar.setPointerCapture(e.pointerId)}catch(_){}
+});
+tabBar.addEventListener('pointermove',e=>{
+  if(!inst.dragging)return;
+  const dx=e.clientX-inst.startX;
+  if(!inst.moved&&Math.abs(dx)>4)inst.moved=true;
+  if(inst.moved){
+    inst.lastDX=e.clientX-inst.lastX;inst.lastX=e.clientX;
+    /* 实时更新吸附目标：即使松手瞬间 rAF 帧未跑到，targetVal 也是最新 */
+    inst.targetVal=clamp(Math.round(inst.startVal+(inst.lastX-inst.startX)/inst.step),0,TAB_COUNT-1);
+    const br=tabBar.getBoundingClientRect();
+    inst.rippleX=e.clientX-br.left;inst.rippleY=e.clientY-br.top;
+    inst.active=true;ensureLoop();
+  }
+});
+function endTabDrag(){
+  if(!inst.dragging)return;
+  inst.dragging=false;
+  /* 关键：用最新手指位置同步重算 val.v——松手瞬间 rAF 帧可能还没跑，
+     val.v 会停留在旧值导致 round 后 target 不变、面板不切换 */
+  inst.val.v=rubber(inst.startVal+(inst.lastX-inst.startX)/inst.step,0,TAB_COUNT-1);
+  const target=clamp(Math.round(inst.val.v),0,TAB_COUNT-1);
+  inst.targetVal=target;
+  inst.rippleX=null;inst.rippleY=null;
+  inst.active=true;ensureLoop();
+  /* 拖动过才切面板（纯点击交给 click）。
+     注意：不能用 active 类判断——render() 拖动时已实时给吸附目标标了 active，
+     用它判断会误判为"已选中"而漏切。 */
+  if(inst.moved){
+    const el=TAB_ITEMS[target];
+    if(el)switchTab(el.dataset.tab);
+  }
+}
+tabBar.addEventListener('pointerup',endTabDrag);
+tabBar.addEventListener('pointercancel',endTabDrag);
+TAB_ITEMS.forEach(t=>t.addEventListener('click',()=>{
+  if(inst.moved){inst.moved=false;return} /* 拖拽后的合成 click，忽略 */
+  vibrate(6);switchTab(t.dataset.tab);
+}));
+measure();render();
+
+/* ============================================================
+   搜索（跨 Tab：搜索时展开全部面板分组，按组过滤）
+   ============================================================ */
+function doSearch(q){
+  q=(q||'').trim().toLowerCase();
+  let any=false;
+  $$('.tool-card').forEach(card=>{
+    const name=card.querySelector('.name').textContent.toLowerCase();
+    const show=!q||name.includes(q)||card.dataset.tool.includes(q);
+    card.classList.toggle('grid-hidden',!show);
+    if(show)any=true;
+  });
+  /* 无匹配的分组标题隐藏 */
+  $$('.section-title').forEach(st=>{
+    const grid=st.nextElementSibling;
+    if(grid&&grid.classList.contains('tool-grid')){
+      const has=$$('.tool-card:not(.grid-hidden)',grid).length>0;
+      st.style.display=(!q||has)?'':'none';
+    }
+  });
+  const hasAny=$$('.tool-card:not(.grid-hidden)').length>0;
+  emptyTip.classList.toggle('show',!hasAny&&q.length>0);
+  searchClear.classList.toggle('show',q.length>0);
+  document.body.classList.toggle('searching',q.length>0);
+}
+
+/* ============================================================
+   事件绑定
+   ============================================================ */
+panelClose.addEventListener('click',()=>{vibrate(6);closePanel();});
+overlay.addEventListener('click',()=>closePanel());
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
+resetBtn.addEventListener('click',()=>{
+  vibrate(8);
+  closePanel(()=>{
+    searchInput.value='';doSearch('');
+    switchTab('common');
+    $('#mainContent').scrollTop=0;
+    toast('已重置视图');
+  });
+});
+searchInput.addEventListener('input',()=>doSearch(searchInput.value));
+searchClear.addEventListener('click',()=>{searchInput.value='';doSearch('');searchInput.focus();});
+window.addEventListener('resize',()=>{
+  measure();render();
+  if(isOpen){
+    stopPanelAnim();
+    stopBodyClip();
+    const size=panelSize(),winW=window.innerWidth,winH=window.innerHeight;
+    setPanelVisual({w:size.w,h:size.h,x:(winW-size.w)/2,y:(winH-size.h)/2,br:28});
+    panel.classList.remove('animating');
+  }
+});
+
+/* ============================================================
+   启动
+   ============================================================ */
+renderCards();
+measure();render();
+console.log('💡 LAMP工具包 v2.0.pre07 — 30 工具 · 并行动画 · clip-path 蒙版揭露 · 液态玻璃 Tab');
+})();
+</script>
+</body>
+</html>
