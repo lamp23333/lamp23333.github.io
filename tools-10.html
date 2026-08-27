@@ -1774,6 +1774,7 @@ function openTool(id,cardEl){
   currentToolId=id;currentCardEl=cardEl||null;isOpen=true;
   panel.classList.remove('done-hide');
   panel.classList.add('open');
+  panel.style.backdropFilter=''; /* 恢复毛玻璃（防关闭动画被抢占后残留 none） */
   setPanelZ(); /* 图层递增：最新展开永远在最上层 */
   overlay.classList.add('active');
   setTimeout(()=>{if(currentCardEl===cardEl)setHiddenCard(cardEl||null);},130); /* 先让按压缩小可见，再隐藏卡片 */
@@ -1801,6 +1802,12 @@ function openTool(id,cardEl){
 function closePanel(cb){
   if(!isOpen&&!panelAnim){if(cb)cb();return;}
   isOpen=false;
+  /* 几何锁定：任何 PC 端 hover/resize/合成干扰先定格，关闭动画从此刻直接收缩 */
+  const lock=readPanelState();
+  if(lock.w>10&&lock.h>10)setPanelVisual(lock);
+  /* 关闭动画期间移除 backdrop-filter：PC 卡顿时毛玻璃合成层滞后于面板几何，
+     会产生「先放大再收回」的视觉残影（注释本要求动画期间关闭它，此前从未实现） */
+  panel.style.backdropFilter='none';
   stopBodyAnim(); /* 取消正文淡入，立即走 .closing 快速淡出 */
   stopBodyClip();
   overlay.classList.remove('active');
@@ -1833,6 +1840,7 @@ function closePanel(cb){
     closingTo=null;
     panel.classList.remove('open');
     panel.classList.add('done-hide');
+    panel.style.backdropFilter=''; /* 恢复毛玻璃 */
     panelBody.classList.remove('closing');
     panelBody.innerHTML='';
     cleanupCurrent();
