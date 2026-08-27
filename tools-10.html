@@ -1832,15 +1832,15 @@ function closePanel(cb){
   }
   closingTo=to; /* 并行动画：被新展开抢占时，剩余收缩交给幽灵面板 */
   let from=readPanelState();
-  /* 展开态快照修正：面板已展开完成（from≈展开态）时直接用精确快照，
-     杜绝 PC 端读取微小偏差导致的「先放大一下下」 */
-  if(lastOpenTo&&from.w>=lastOpenTo.w*0.95&&from.w<=lastOpenTo.w*1.05&&from.h>=lastOpenTo.h*0.95&&from.h<=lastOpenTo.h*1.05){
-    from={w:lastOpenTo.w,h:lastOpenTo.h,x:lastOpenTo.x,y:lastOpenTo.y,br:lastOpenTo.br};
-  }
-  /* 防御：PC 端 hover/卡顿可能让读取值异常 → 回退当前窗口展开态，保证直接收回 */
-  const ps=panelSize();
-  if(!from.w||!from.h||from.w<10||from.h<10||from.w>ps.w*1.15||from.h>ps.h*1.15){
-    from={w:ps.w,h:ps.h,x:(window.innerWidth-ps.w)/2,y:(window.innerHeight-ps.h)/2,br:28};
+  /* 核心防御：关闭动画起点永远不能大于展开态。
+     PC 端 hover/resize 干扰可能让读取值比展开态大 2%~15%（此前 1.15 倍与 ±5%
+     两重防御存在区间漏洞），一旦异常放大一律回退到展开态快照，杜绝「先放大一下下」 */
+  const refW=lastOpenTo?lastOpenTo.w:panelSize().w;
+  const refH=lastOpenTo?lastOpenTo.h:panelSize().h;
+  const refX=lastOpenTo?lastOpenTo.x:(window.innerWidth-refW)/2;
+  const refY=lastOpenTo?lastOpenTo.y:(window.innerHeight-refH)/2;
+  if(!from.w||!from.h||from.w<10||from.h<10||from.w>refW*1.02||from.h>refH*1.02){
+    from={w:refW,h:refH,x:refX,y:refY,br:28};
   }
   runBodyClip(false); /* 蒙版反向收缩，内容随之收拢 */
   animatePanel(from,to,CLOSE_MS,()=>{
