@@ -1569,6 +1569,7 @@ function stopPanelAnim(){
 let layerIndex=100;
 let ghostLayer=91; /* 幽灵层：overlay(90)之上、主面板(100+)之下 */
 let closingTo=null; /* 关闭动画目标态（被新展开抢占时交给幽灵面板） */
+let lastOpenTo=null; /* 最近一次展开目标态快照：关闭时 from 修正用，杜绝「先放大一下下」 */
 function setPanelZ(){
   /* 读 DOM 真实幽灵 z，确保主面板永远高于所有进行中的收回动画（+2）与 overlay(90) */
   let maxGhost=90;
@@ -1744,6 +1745,7 @@ function openTool(id,cardEl){
   const size=panelSize();
   const winW=window.innerWidth,winH=window.innerHeight;
   const to={w:size.w,h:size.h,x:(winW-size.w)/2,y:(winH-size.h)/2,br:28};
+  lastOpenTo=to; /* 缓存展开态快照 */
 
   let from=null;
   if(panelAnim && !isOpen && closingTo){
@@ -1825,6 +1827,11 @@ function closePanel(cb){
   }
   closingTo=to; /* 并行动画：被新展开抢占时，剩余收缩交给幽灵面板 */
   let from=readPanelState();
+  /* 展开态快照修正：面板已展开完成（from≈展开态）时直接用精确快照，
+     杜绝 PC 端读取微小偏差导致的「先放大一下下」 */
+  if(lastOpenTo&&from.w>=lastOpenTo.w*0.95&&from.w<=lastOpenTo.w*1.05&&from.h>=lastOpenTo.h*0.95&&from.h<=lastOpenTo.h*1.05){
+    from={w:lastOpenTo.w,h:lastOpenTo.h,x:lastOpenTo.x,y:lastOpenTo.y,br:lastOpenTo.br};
+  }
   /* 防御：PC 端 hover/卡顿可能让读取值异常 → 回退当前窗口展开态，保证直接收回 */
   const ps=panelSize();
   if(!from.w||!from.h||from.w<10||from.h<10||from.w>ps.w*1.15||from.h>ps.h*1.15){
@@ -1878,7 +1885,8 @@ function stepSpring(s,target,sp,dt){const a=sp.k*(target-s.v)-sp.c*s.vel;s.vel+=
 const inst={
   val:{v:0,vel:0},press:{v:0,vel:0},sx:{v:1,vel:0},sy:{v:1,vel:0},
   targetVal:0,lastIdx:0,dragVel:0,tabW:0,step:0,
-  dragging:false,moved:false,startX:0,lastX:0,startVal:0,lastDX:0,rippleX:null,rippleY:null,active:false
+  dragging:false,moved:false,startX:0,lastX:0,startVal:0,lastDX:0,rippleX:null,rippleY:null,active:false,
+  dxHist:[],pointerIsTouch:false
 };
 function measure(){
   const avail=Math.min(window.innerWidth-32,920);
@@ -1896,7 +1904,8 @@ function update(dt){
   if(inst.dragging){
     inst.val.v=rubber(inst.startVal+(inst.lastX-inst.startX)/inst.step,0,TAB_COUNT-1);
     inst.targetVal=clamp(Math.round(inst.val.v),0,TAB_COUNT-1);
-    inst.dragVel=(inst.lastDX/inst.step)||0;
+    const avgDx=inst.dxHist.length?inst.dxHist.reduce((a,b)=>a+b,0)/inst.dxHist.length:0;
+    inst.dragVel=(avgDx/inst.step)||0; /* 平均速度：手机慢速拖动也稳定 */
     stepSpring(inst.press,1,PRESS_SPRING,dt);
     stepSpring(inst.sx,PRESSED_SCALE,PRESS_SPRING,dt);
     stepSpring(inst.sy,PRESSED_SCALE,PRESS_SPRING,dt);
@@ -1914,7 +1923,8 @@ function render(){
   tabBar.style.transform='translateX(-50%) scale('+(1+.05*p)+')';
   const tabScale=1+.07*p; /* 灰 track 与蓝 accent 同倍率缩放：按下时图标不错位 */
   tabTrack.style.transform='scale('+tabScale+')';
-  const vc=clamp(inst.dragVel*.75,-.28,.28); /* 速度形变增强：手机端快速甩动也明显 */
+  /* 速度形变：touch 系数高（手指速度慢，补偿增强）、mouse 系数低（鼠标甩动快，防过度） */
+  const vc=clamp(inst.dragVel*(inst.pointerIsTouch?1.2:.45),-.3,.3);
   const sxr=clamp(inst.sx.v,0.2,4)/(1-vc*.75),syr=clamp(inst.sy.v,0.2,4)*(1-vc*.25);
   tabPill.style.transform='translateX('+x+'px) scale('+sxr+','+syr+')';
   tabPill.style.boxShadow='0 '+(4+10*p)+'px '+(14+14*p)+'px rgba(0,0,0,'+(.10+.08*p)+'), inset 0 0 0 .5px rgba(255,255,255,'+(.24+.16*p)+'), inset 0 -1px 3px rgba(0,0,0,'+(.04+.06*p)+')';
@@ -1953,6 +1963,7 @@ function switchTab(tab){
 /* 指针交互：手指/高光/滑块一体跟手 */
 tabBar.addEventListener('pointerdown',e=>{
   inst.dragging=true;inst.moved=false;
+  inst.pointerIsTouch=(e.pointerType==='touch');inst.dxHist=[];
   inst.startX=inst.lastX=e.clientX;inst.startVal=inst.val.v;inst.lastDX=0;
   inst.targetVal=clamp(Math.round(inst.val.v),0,TAB_COUNT-1);
   const br=tabBar.getBoundingClientRect();
@@ -1965,7 +1976,9 @@ tabBar.addEventListener('pointermove',e=>{
   const dx=e.clientX-inst.startX;
   if(!inst.moved&&Math.abs(dx)>(e.pointerType==='mouse'?8:4))inst.moved=true;
   if(inst.moved){
-    inst.lastDX=e.clientX-inst.lastX;inst.lastX=e.clientX;
+    inst.dxHist.push(e.clientX-inst.lastX); /* 平滑速度：滑动窗口最近5段位移 */
+    if(inst.dxHist.length>5)inst.dxHist.shift();
+    inst.lastX=e.clientX;
     /* 实时更新吸附目标：即使松手瞬间 rAF 帧未跑到，targetVal 也是最新 */
     inst.targetVal=clamp(Math.round(inst.startVal+(inst.lastX-inst.startX)/inst.step),0,TAB_COUNT-1);
     const br=tabBar.getBoundingClientRect();
@@ -1977,6 +1990,7 @@ function endTabDrag(){
   if(!inst.dragging)return;
   inst.dragging=false;
   inst.dragVel=0; /* 关键：松手立即清零拖动速度——消除松开瞬间的速度形变，滑块平滑吸附不"飞" */
+  inst.dxHist=[]; /* 同步清空速度窗口 */
   /* 关键：用最新手指位置同步重算 val.v——松手瞬间 rAF 帧可能还没跑，
      val.v 会停留在旧值导致 round 后 target 不变、面板不切换。
      用 clamp 而非 rubber：PC 鼠标在底栏外松开时不会从界外位置"飞"回 */
