@@ -1774,7 +1774,6 @@ function openTool(id,cardEl){
   currentToolId=id;currentCardEl=cardEl||null;isOpen=true;
   panel.classList.remove('done-hide');
   panel.classList.add('open');
-  panel.style.backdropFilter=''; /* 恢复毛玻璃（防关闭动画被抢占后残留 none） */
   setPanelZ(); /* 图层递增：最新展开永远在最上层 */
   overlay.classList.add('active');
   setTimeout(()=>{if(currentCardEl===cardEl)setHiddenCard(cardEl||null);},130); /* 先让按压缩小可见，再隐藏卡片 */
@@ -1802,12 +1801,9 @@ function openTool(id,cardEl){
 function closePanel(cb){
   if(!isOpen&&!panelAnim){if(cb)cb();return;}
   isOpen=false;
-  /* 几何锁定：任何 PC 端 hover/resize/合成干扰先定格，关闭动画从此刻直接收缩 */
-  const lock=readPanelState();
-  if(lock.w>10&&lock.h>10)setPanelVisual(lock);
-  /* 关闭动画期间移除 backdrop-filter：PC 卡顿时毛玻璃合成层滞后于面板几何，
-     会产生「先放大再收回」的视觉残影（注释本要求动画期间关闭它，此前从未实现） */
-  panel.style.backdropFilter='none';
+  /* 立即终止卡片入场动画：关闭时恢复的卡片从最终态(scale 1)显示，
+     不再透过毛玻璃「放大一下下」（cardIn 的 fill:both 锁在 scale .97→1 中途） */
+  $$('.tool-card.enter').forEach(c=>c.classList.remove('enter'));
   stopBodyAnim(); /* 取消正文淡入，立即走 .closing 快速淡出 */
   stopBodyClip();
   overlay.classList.remove('active');
@@ -1829,8 +1825,7 @@ function closePanel(cb){
   }
   closingTo=to; /* 并行动画：被新展开抢占时，剩余收缩交给幽灵面板 */
   let from=readPanelState();
-  /* 防御：PC 端 hover/卡顿/滚动条变化可能让读取值异常放大（先放大再收回），
-     回退当前窗口展开态，保证关闭动画「直接收回」与手机版一致 */
+  /* 防御：PC 端 hover/卡顿可能让读取值异常 → 回退当前窗口展开态，保证直接收回 */
   const ps=panelSize();
   if(!from.w||!from.h||from.w<10||from.h<10||from.w>ps.w*1.15||from.h>ps.h*1.15){
     from={w:ps.w,h:ps.h,x:(window.innerWidth-ps.w)/2,y:(window.innerHeight-ps.h)/2,br:28};
@@ -1840,7 +1835,6 @@ function closePanel(cb){
     closingTo=null;
     panel.classList.remove('open');
     panel.classList.add('done-hide');
-    panel.style.backdropFilter=''; /* 恢复毛玻璃 */
     panelBody.classList.remove('closing');
     panelBody.innerHTML='';
     cleanupCurrent();
@@ -1920,7 +1914,7 @@ function render(){
   tabBar.style.transform='translateX(-50%) scale('+(1+.05*p)+')';
   const tabScale=1+.07*p; /* 灰 track 与蓝 accent 同倍率缩放：按下时图标不错位 */
   tabTrack.style.transform='scale('+tabScale+')';
-  const vc=clamp(inst.dragVel*.5,-.2,.2);
+  const vc=clamp(inst.dragVel*.75,-.28,.28); /* 速度形变增强：手机端快速甩动也明显 */
   const sxr=clamp(inst.sx.v,0.2,4)/(1-vc*.75),syr=clamp(inst.sy.v,0.2,4)*(1-vc*.25);
   tabPill.style.transform='translateX('+x+'px) scale('+sxr+','+syr+')';
   tabPill.style.boxShadow='0 '+(4+10*p)+'px '+(14+14*p)+'px rgba(0,0,0,'+(.10+.08*p)+'), inset 0 0 0 .5px rgba(255,255,255,'+(.24+.16*p)+'), inset 0 -1px 3px rgba(0,0,0,'+(.04+.06*p)+')';
