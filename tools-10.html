@@ -308,7 +308,7 @@ body.searching .tab-panel{display:block}
   background:rgba(255,255,255,.6);border:1px solid var(--separator);box-shadow:var(--shadow-lg);
   border-radius:var(--r-xl);overflow:hidden;display:flex;flex-direction:column;
   width:320px;height:240px;opacity:0;pointer-events:none;
-  will-change:transform,width,height,border-radius;
+  will-change:transform,width,height,border-radius,backdrop-filter;
   contain:layout paint;
   -webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);
 }
@@ -1649,11 +1649,16 @@ function animatePanel(from,to,dur,onDone){
       y:from.y+(to.y-from.y)*p,
       br:from.br+(to.br-from.br)*p
     });
+    /* 阴影跟手：关闭时阴影随面板同步收缩（消除大阴影相对扩散的「放大一下下」感知） */
+    const closing=to.w<from.w;
+    const s=closing?(1-p):p;
+    panel.style.boxShadow='0 '+(26*s)+'px '+(54*s)+'px rgba(0,0,0,'+(0.24*s+0.04)+')';
     if(t<1){requestAnimationFrame(step);}
     else{
       panelAnim=null;
       panel.classList.remove('animating');
       setPanelVisual(to);
+      panel.style.boxShadow=''; /* 恢复 CSS 默认阴影 */
       if(onDone)onDone();
     }
   };
@@ -1923,9 +1928,9 @@ function render(){
   tabBar.style.transform='translateX(-50%) scale('+(1+.05*p)+')';
   const tabScale=1+.07*p; /* 灰 track 与蓝 accent 同倍率缩放：按下时图标不错位 */
   tabTrack.style.transform='scale('+tabScale+')';
-  /* 速度形变：touch 系数高（手指速度慢，补偿增强）、mouse 系数低（鼠标甩动快，防过度） */
-  const vc=clamp(inst.dragVel*(inst.pointerIsTouch?1.2:.45),-.3,.3);
-  const sxr=clamp(inst.sx.v,0.2,4)/(1-vc*.75),syr=clamp(inst.sy.v,0.2,4)*(1-vc*.25);
+  /* 速度形变（等比放大）：touch 系数高（手指速度慢，补偿增强）、mouse 系数低（鼠标甩动快，防过度） */
+  const vc=clamp(inst.dragVel*(inst.pointerIsTouch?1.5:.6),-.4,.4);
+  const sxr=clamp(inst.sx.v,0.2,4)/(1-vc),syr=clamp(inst.sy.v,0.2,4)*(1-vc*.35);
   tabPill.style.transform='translateX('+x+'px) scale('+sxr+','+syr+')';
   tabPill.style.boxShadow='0 '+(4+10*p)+'px '+(14+14*p)+'px rgba(0,0,0,'+(.10+.08*p)+'), inset 0 0 0 .5px rgba(255,255,255,'+(.24+.16*p)+'), inset 0 -1px 3px rgba(0,0,0,'+(.04+.06*p)+')';
   tabAccent.style.transform='translateX('+x+'px)';
