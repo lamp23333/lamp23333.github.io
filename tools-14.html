@@ -750,8 +750,7 @@ const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* 图标语义色（克制、系统色） */
 const ICON_COLORS = {
-  calculator:'#0a84ff', timer:'#ff375f', pomodoro:'#ff9500',
-  unit:'#30b0c7', currency:'#34c759', baseConvert:'#0a84ff',
+  calculator:'#0a84ff', timer:'#ff375f', unit:'#30b0c7', currency:'#34c759', baseConvert:'#0a84ff',
   bmi:'#ff9500', random:'#ff9f0a', coordConvert:'#30b0c7', mortgage:'#34c759',
   age:'#ff375f', jsonFormat:'#5856d6', uuid:'#af52de', urlEncode:'#0a84ff',
   base64:'#30b0c7', regex:'#ff9500', markdown:'#5856d6', hash:'#0a84ff',
@@ -2914,11 +2913,11 @@ colorPicker:{
    分组
    ============================================================ */
 const GROUPS = {
-  common:['calculator','timer','pomodoro','bmi','unit','currency'],
+  common:['calculator','timer','countdown','bmi','unit','currency'],
   calc:['baseConvert','random','coordConvert','mortgage','age','subnet','compound','chineseNum','roman','geometry','percent'],
   dev:['jsonFormat','uuid','urlEncode','base64','regex','markdown','hash','diff','jwt','cron','yamlJson','csvJson','sqlFormat','htmlEntities'],
   security:['passwordStrength','qr','imageToBase64'],
-  time:['timestamp','date','countdown','timezone'],
+  time:['timestamp','date','timezone'],
   design:['text','wordCount','colorPicker','gradient','shadow']
 };
 const GRID_MAP={common:'toolGridCommon',calc:'toolGridCalc',dev:'toolGridDev',security:'toolGridSecurity',time:'toolGridTime',design:'toolGridDesign'};
@@ -2935,8 +2934,7 @@ let currentToolId=null,currentCardEl=null,isOpen=false,cleanupFn=null,hiddenCard
 
 /* 工具一句话描述（卡片副标题，增强苹果味） */
 const DESC={
-  calculator:'四则·函数·科学计算', timer:'毫秒级精确计时', pomodoro:'专注25分钟工作法',
-  bmi:'身高体重评估', unit:'长度重量温度换算', currency:'多币种汇率换算', baseConvert:'二八十六进制互转',
+  calculator:'四则·函数·科学计算', timer:'毫秒级精确计时', bmi:'身高体重评估', unit:'长度重量温度换算', currency:'多币种汇率换算', baseConvert:'二八十六进制互转',
    random:'随机数·密码·颜色', coordConvert:'十进制度数转度分秒', mortgage:'月供与利息测算',
   age:'周岁与生日倒计时', jsonFormat:'JSON 格式化与压缩', uuid:'RFC4122 v4 生成', urlEncode:'URL 编码与解码',
   base64:'Base64 编解码', regex:'正则匹配与测试', markdown:'Markdown 实时预览', hash:'MD5/SHA 系列摘要',
