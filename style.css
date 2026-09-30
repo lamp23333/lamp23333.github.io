@@ -1,0 +1,273 @@
+/* ===== 字体：MiSans（fonts/ 为子集化产物，由 CI 自动生成） ===== */
+@font-face {
+  font-family: 'MiSans';
+  src: url('fonts/MiSans-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MiSans';
+  src: url('fonts/MiSans-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MiSans';
+  src: url('fonts/MiSans-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'MiSans TC';
+  src: url('fonts/MisansTC-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MiSans TC';
+  src: url('fonts/MisansTC-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MiSans TC';
+  src: url('fonts/MisansTC-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'MiSans Latin';
+  src: url('fonts/MiSansLatin-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MiSans Latin';
+  src: url('fonts/MiSansLatin-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MiSans Latin';
+  src: url('fonts/MiSansLatin-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* ===== 全局 ===== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'MiSans Latin', 'MiSans', -apple-system, BlinkMacSystemFont, "Microsoft YaHei", "PingFang SC", sans-serif;
+  background: #f7f8fa;
+  color: #222;
+  line-height: 1.7;
+  padding-top: 84px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 繁体中文优先使用 MiSans TC */
+html[lang="zh-Hant"] body {
+  font-family: 'MiSans Latin', 'MiSans TC', -apple-system, BlinkMacSystemFont, "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+a { text-decoration: none; color: inherit; }
+
+/* ===== 顶栏 ===== */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-radius: 0 0 16px 16px;
+  z-index: 999;
+}
+
+.nav-left { display: flex; align-items: center; gap: 12px; }
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #ddd;
+  object-fit: cover;
+}
+
+.nav-name { font-size: 16px; font-weight: 700; }
+
+/* 语言菜单 */
+.lang-dropdown { position: relative; }
+
+.lang-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  transition: background 120ms ease;
+}
+.lang-btn:hover { background: rgba(0, 0, 0, 0.05); }
+.lang-btn:active { transform: scale(0.92); }
+.lang-btn img { width: 24px; height: 24px; flex-shrink: 0; }
+
+.lang-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 8px 0;
+  min-width: 160px;
+  display: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.lang-dropdown.active .lang-menu {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+.lang-menu button {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: inherit;
+}
+.lang-menu button:hover { background: #f2f3f5; }
+.lang-menu button.active { font-weight: 700; color: #06c; }
+
+/* ===== 主体 ===== */
+.container { max-width: 760px; margin: 0 auto; padding: 20px; }
+
+h1 { font-size: 22px; font-weight: 700; margin-bottom: 24px; text-align: center; }
+p { margin-bottom: 18px; font-size: 15px; }
+
+/* 分隔线 */
+.divider { height: 1px; background: #eee; margin: 40px 0 20px 0; }
+
+.nav-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; text-align: center; }
+
+/* 导航按钮 */
+.button-group { display: flex; gap: 16px; flex-wrap: wrap; }
+
+.nav-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  flex: 1;
+  min-width: 200px;
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+.nav-button:hover { border-color: #ccc; }
+.nav-button:active { transform: scale(0.98); }
+.nav-button img { width: 20px; height: 20px; flex-shrink: 0; }
+.nav-button span { font-size: 15px; font-weight: 500; }
+
+/* ===== 404 ===== */
+.container.center { text-align: center; }
+.title-404 { font-size: 80px; font-weight: 700; margin: 60px 0 20px; }
+.desc { font-size: 15px; line-height: 1.7; margin-bottom: 40px; }
+
+/* 通用按钮（404 返回按钮 / 卡片页 CTA 共用同一套样式） */
+.btn,
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 16px 28px;
+  font-size: 15px;
+  font-weight: 500;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+.btn:hover,
+.btn-back:hover { border-color: #ccc; }
+.btn:active,
+.btn-back:active { transform: scale(0.98); }
+.btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+/* ===== 居中内容页（项目 / 产品介绍） ===== */
+.hero {
+  min-height: calc(100dvh - 84px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+}
+
+.intro {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.intro h1 {
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  margin-bottom: 32px;
+  max-width: 18em;
+}
+
+/* 标签小字 */
+.eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #9aa0a6;
+  margin-bottom: 16px;
+  padding-left: 0.22em;
+}
+
+/* ===== 手机自适应 ===== */
+@media (max-width: 500px) {
+  .nav { padding: 0 12px; }
+  .button-group { flex-direction: column; }
+  .nav-button { width: 100%; }
+  .btn { width: 100%; }
+  h1 { font-size: 20px; }
+}
+
+/* ===== 动效降级 ===== */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+}

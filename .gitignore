@@ -1,0 +1,7 @@
+# 字体子集化产物（由 CI 自动生成，不上传仓库）
+fonts/
+
+# 系统垃圾文件
+.DS_Store
+Thumbs.db
+desktop.ini

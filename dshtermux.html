@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<title>DSH-TERMUX-FIX</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="icon" type="image/x-icon" href="favicon/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="favicon/android-chrome-192x192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="favicon/android-chrome-512x512.png">
+<link rel="apple-touch-icon" href="favicon/apple-touch-icon.png">
+<link rel="manifest" href="favicon/site.webmanifest">
+
+</head>
+
+<body>
+
+<!-- 顶栏 -->
+<div class="nav">
+  <div class="nav-left">
+    <img class="avatar" src="avatar.png" alt="头像">
+    <div class="nav-name" data-i18n="siteName">LAMP白炽灯</div>
+  </div>
+
+  <div class="lang-dropdown">
+    <button class="lang-btn" type="button" aria-label="切换语言" aria-haspopup="true" aria-expanded="false">
+      <img src="globe.svg" alt="">
+    </button>
+    <div class="lang-menu" role="menu">
+      <button type="button" class="active" data-lang="zh" role="menuitem">中文（简体）</button>
+      <button type="button" data-lang="zh-tw" role="menuitem">中文（繁體）</button>
+      <button type="button" data-lang="en" role="menuitem">English</button>
+    </div>
+  </div>
+</div>
+
+<!-- 主体：居中内容（无卡片，直接落在背景上） -->
+<main class="hero">
+  <section class="intro">
+    <div class="eyebrow">DSH-TERMUX-FIX</div>
+
+    <h1 data-i18n="heading">一键补丁脚本，让 DeepSeek Harness 在 Android Termux 环境正常运行。</h1>
+
+    <a class="btn" href="https://github.com/lamp23333/dsh-termux-fix" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+      </svg>
+      <span data-i18n="cta">查看 GitHub 仓库</span>
+    </a>
+  </section>
+</main>
+
+<script>
+  /* ===== 语言切换（单页内切换，无需跳转） ===== */
+  (function () {
+    var I18N = {
+      zh: {
+        htmlLang: 'zh-Hans',
+        siteName: 'LAMP白炽灯',
+        heading: '一键补丁脚本，让 DeepSeek Harness 在 Android Termux 环境正常运行。',
+        cta: '查看 GitHub 仓库'
+      },
+      'zh-tw': {
+        htmlLang: 'zh-Hant',
+        siteName: 'lamp23333',
+        heading: '一鍵補丁腳本，讓 DeepSeek Harness 在 Android Termux 環境正常運行。',
+        cta: '查看 GitHub 倉庫'
+      },
+      en: {
+        htmlLang: 'en-US',
+        siteName: 'lamp23333',
+        heading: 'A one-click patch script that gets DeepSeek Harness running properly in an Android Termux environment.',
+        cta: 'View GitHub Repository'
+      }
+    };
+
+    var STORAGE_KEY = 'lamp-site-lang';
+
+    function apply(lang) {
+      var t = I18N[lang] || I18N.zh;
+      document.documentElement.lang = t.htmlLang;
+
+      document.querySelectorAll('[data-i18n]').forEach(function (el) {
+        var key = el.getAttribute('data-i18n');
+        if (t[key] !== undefined) el.textContent = t[key];
+      });
+
+      document.querySelectorAll('.lang-menu button').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.lang === lang);
+      });
+
+      try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) {}
+    }
+
+    /* 顶栏：语言下拉展开 / 收起 */
+    var btn = document.querySelector('.lang-btn');
+    var dropdown = document.querySelector('.lang-dropdown');
+
+    if (btn && dropdown) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var open = dropdown.classList.toggle('active');
+        btn.setAttribute('aria-expanded', String(open));
+      });
+
+      document.addEventListener('click', function () {
+        dropdown.classList.remove('active');
+        btn.setAttribute('aria-expanded', 'false');
+      });
+
+      document.querySelectorAll('.lang-menu button').forEach(function (item) {
+        item.addEventListener('click', function () {
+          apply(item.dataset.lang);
+          dropdown.classList.remove('active');
+          btn.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
+
+    /* 恢复上次选择 */
+    var saved = null;
+    try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    apply(saved && I18N[saved] ? saved : 'zh');
+  })();
+</script>
+
+</body>
+</html>

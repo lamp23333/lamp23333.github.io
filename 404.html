@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>404 - 页面未找到</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="icon" type="image/x-icon" href="favicon/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="favicon/android-chrome-192x192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="favicon/android-chrome-512x512.png">
+<link rel="apple-touch-icon" href="favicon/apple-touch-icon.png">
+<link rel="manifest" href="favicon/site.webmanifest">
+
+</head>
+
+<body>
+
+<!-- 顶栏 -->
+<div class="nav">
+  <div class="nav-left">
+    <img class="avatar" src="avatar.png" alt="头像">
+    <div class="nav-name" data-i18n="siteName">LAMP白炽灯</div>
+  </div>
+
+  <div class="lang-dropdown">
+    <button class="lang-btn" type="button" aria-label="切换语言" aria-haspopup="true" aria-expanded="false">
+      <img src="globe.svg" alt="">
+    </button>
+    <div class="lang-menu" role="menu">
+      <button type="button" data-lang="zh" role="menuitem">中文（简体）</button>
+      <button type="button" data-lang="zh-tw" role="menuitem">中文（繁體）</button>
+      <button type="button" data-lang="en" role="menuitem">English</button>
+    </div>
+  </div>
+</div>
+
+<!-- 主体 -->
+<div class="container center">
+  <div class="title-404">404</div>
+  <div class="desc">
+    <span data-i18n="nf1">很抱歉，您请求的页面无法找到。</span><br>
+    <span data-i18n="nf2">可能网址有误，或该页面已不存在。</span>
+  </div>
+  <a href="index.html" class="btn-back" data-i18n="nfBack">返回主页</a>
+</div>
+
+<script src="lang.js"></script>
+
+</body>
+</html>
