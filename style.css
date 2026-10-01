@@ -59,6 +59,12 @@
 /* ===== 全局 ===== */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* 移动端点击不再出现蓝色高亮方块 */
+html { -webkit-tap-highlight-color: transparent; }
+
+/* 鼠标 / 触摸点击不再留下焦点框；键盘 Tab 导航仍然保留（可访问性） */
+:focus:not(:focus-visible) { outline: none; }
+
 body {
   font-family: 'MiSans Latin', 'MiSans', -apple-system, BlinkMacSystemFont, "Microsoft YaHei", "PingFang SC", sans-serif;
   background: #f7f8fa;
@@ -119,10 +125,23 @@ a { text-decoration: none; color: inherit; }
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  transition: background 120ms ease;
+  transition: background 120ms ease, transform 140ms cubic-bezier(0.2, 0.8, 0.3, 1);
 }
-.lang-btn:hover { background: rgba(0, 0, 0, 0.05); }
-.lang-btn:active { transform: scale(0.92); }
+/* 触摸设备上浏览器会把 hover 状态"粘"住，导致点过地球按钮后一直留着灰色圆底
+   —— 所以只在真正支持悬停的设备（鼠标）上启用 */
+@media (hover: hover) {
+  .lang-btn:hover { background: rgba(0, 0, 0, 0.05); }
+}
+
+/* 按下瞬间的加深反馈：触摸设备也有，松手即消失（不像 :hover 会粘住） */
+.lang-btn:active {
+  background: rgba(0, 0, 0, 0.06);
+  transform: scale(0.9);
+}
+
+/* 菜单展开期间按钮保持加深，表示"菜单是它打开的" */
+.lang-dropdown.active .lang-btn { background: rgba(0, 0, 0, 0.06); }
+
 .lang-btn img { width: 24px; height: 24px; flex-shrink: 0; }
 
 .lang-menu {
@@ -134,15 +153,31 @@ a { text-decoration: none; color: inherit; }
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   padding: 8px 0;
   min-width: 160px;
-  display: none;
+  z-index: 1000;
+  /* 展开动画：只用 transform / opacity，且不能从 display:none 起步 */
+  transform-origin: top right;
   opacity: 0;
-  transform: translateY(-4px);
-  transition: opacity 200ms ease, transform 200ms ease;
+  transform: translateY(-8px) scale(0.96);
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 200ms ease,
+              transform 220ms cubic-bezier(0.2, 0.8, 0.3, 1),
+              visibility 0s linear 220ms;
 }
 .lang-dropdown.active .lang-menu {
-  display: block;
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 200ms ease,
+              transform 220ms cubic-bezier(0.2, 0.8, 0.3, 1),
+              visibility 0s;
+}
+
+/* 系统开启"减少动态效果"时不做过渡 */
+@media (prefers-reduced-motion: reduce) {
+  .lang-btn,
+  .lang-menu { transition: none; }
 }
 .lang-menu button {
   display: block;
@@ -156,7 +191,10 @@ a { text-decoration: none; color: inherit; }
   font-size: 14px;
   color: inherit;
 }
-.lang-menu button:hover { background: #f2f3f5; }
+@media (hover: hover) {
+  .lang-menu button:hover { background: #f2f3f5; }
+}
+.lang-menu button:active { background: #f2f3f5; }
 .lang-menu button.active { font-weight: 700; color: #06c; }
 
 /* ===== 主体 ===== */
