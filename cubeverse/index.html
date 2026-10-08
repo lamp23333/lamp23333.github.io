@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="theme-color" content="#0b1a28">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="方块深空">
+<title>方块深空 · Cubeverse</title>
+<link rel="stylesheet" href="css/style.css?v=19">
+<link rel="manifest" href="manifest.json?v=19">
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+    <div id="loading-screen">
+      <div class="loader-title">方块深空</div>
+      <div class="loader-sub">CUBEVERSE · 无人深空 × 我的世界</div>
+      <div class="loader-bar"><div class="loader-fill"></div></div>
+      <div class="loader-text">正在生成星域...</div>
+    </div>
+
+    <div id="main-menu" class="overlay active">
+      <div class="menu-panel">
+        <div class="menu-logo">CUBEVERSE</div>
+        <div class="menu-title">方块深空</div>
+        <div class="menu-sub">我的世界 × 无人深空 融合宇宙</div>
+        <button id="btn-new-game" class="menu-btn primary">开始新游戏</button>
+        <button id="btn-controls" class="menu-btn">操作说明</button>
+        <button id="btn-audio" class="menu-btn">音效开关</button>
+        <div class="menu-hint">支持 PC 键鼠 · 移动端触屏</div>
+      </div>
+    </div>
+
+    <div id="controls-modal" class="overlay hidden">
+      <div class="panel small">
+        <h2>操作说明</h2>
+        <div class="controls-grid">
+          <div><b>W A S D</b> 移动 / 推进与翻滚</div>
+          <div><b>鼠标</b> 视角 / 飞船转向</div>
+          <div><b>空格</b> 跳跃</div>
+          <div><b>Shift</b> 冲刺 / 脉冲加速</div>
+          <div><b>左键</b> 采集 / 攻击</div>
+          <div><b>右键</b> 放置方块 / 使用</div>
+          <div><b>F</b> 互动 / 登船 / 降落 / 扫描</div>
+          <div><b>Q</b> 扫描仪</div>
+          <div><b>Tab</b> 背包与合成</div>
+          <div><b>1~8</b> 快捷栏</div>
+          <div><b>V</b> 切换视角</div>
+          <div><b>Esc</b> 暂停 / 释放鼠标</div>
+          <div><b>移动端</b> 左摇杆移动 · 右侧拖拽视角 · 按钮操作</div>
+        </div>
+        <button id="btn-close-controls" class="menu-btn">返回</button>
+      </div>
+    </div>
+
+    <div id="hud" class="hidden">
+      <div id="crosshair"></div>
+      <div id="top-left">
+        <div class="planet-tag" id="hud-location">未知星球</div>
+        <div class="objective" id="hud-objective">收集资源，修复飞船</div>
+      </div>
+      <div id="top-right">
+        <div class="stat-block">
+          <div class="stat-label">飞船</div>
+          <div class="stat-row"><span>燃料</span><div class="bar"><i id="bar-fuel"></i></div><b id="num-fuel">0</b></div>
+          <div class="stat-row"><span>护盾</span><div class="bar"><i id="bar-shield"></i></div><b id="num-shield">100</b></div>
+        </div>
+      </div>
+      <div id="bottom-left">
+        <div class="stat-row"><span>生命</span><div class="bar hp"><i id="bar-hp"></i></div><b id="num-hp">100</b></div>
+        <div class="stat-row"><span>氧气</span><div class="bar o2"><i id="bar-o2"></i></div><b id="num-o2">100</b></div>
+        <div class="stat-row"><span>喷射</span><div class="bar jet"><i id="bar-jet"></i></div><b id="num-jet">100</b></div>
+      </div>
+      <div id="bottom-center">
+        <div id="hotbar"></div>
+      </div>
+      <div id="interact-hint" class="hidden"></div>
+      <div id="speedometer" class="hidden">
+        <div class="speed-num" id="speed-value">0</div>
+        <div class="speed-unit">u/s</div>
+        <div id="pulse-status">常规飞行</div>
+      </div>
+      <div id="scan-overlay" class="hidden"></div>
+      <div id="toast-container"></div>
+      <div id="transition-overlay" class="hidden">
+        <div class="transition-fx"></div>
+        <div class="transition-label" id="transition-label">进入大气层</div>
+      </div>
+    </div>
+
+    <div id="touch-controls" class="hidden">
+      <div id="touch-look-area"></div>
+      <div id="joy-zone">
+        <div id="joy-base"><div id="joy-thumb"></div></div>
+        <div class="joy-label">移动 / 飞船</div>
+      </div>
+      <div id="touch-buttons">
+        <button class="tbtn tbtn-mine" id="btn-touch-mine" aria-label="采集">⛏<span>采集</span></button>
+        <button class="tbtn tbtn-place" id="btn-touch-place" aria-label="放置">🧱<span>放置</span></button>
+        <button class="tbtn tbtn-jump" id="btn-touch-jump" aria-label="跳跃">⬆<span>跳跃</span></button>
+        <button class="tbtn tbtn-sprint" id="btn-touch-sprint" aria-label="加速">⚡<span>加速</span></button>
+        <button class="tbtn tbtn-interact" id="btn-touch-interact" aria-label="互动">✋<span>互动</span></button>
+        <button class="tbtn tbtn-scan" id="btn-touch-scan" aria-label="扫描">📡<span>扫描</span></button>
+        <button class="tbtn tbtn-inventory" id="btn-touch-inventory" aria-label="背包">🎒<span>背包</span></button>
+        <button class="tbtn tbtn-camera" id="btn-touch-camera" aria-label="视角">👁<span>视角</span></button>
+        <button class="tbtn tbtn-pause" id="btn-touch-pause" aria-label="暂停">⏸<span>暂停</span></button>
+      </div>
+    </div>
+
+    <div id="inventory-modal" class="overlay hidden">
+      <div class="panel inventory-panel">
+        <div class="panel-header">
+          <h2>背包与合成</h2>
+          <div class="resources-summary" id="inventory-resources"></div>
+        </div>
+        <div class="inv-columns">
+          <div class="inv-section">
+            <h3>资源</h3>
+            <div id="resource-list" class="resource-list"></div>
+          </div>
+          <div class="inv-section">
+            <h3>合成配方</h3>
+            <div id="recipe-list" class="recipe-list"></div>
+          </div>
+        </div>
+        <button id="btn-close-inventory" class="menu-btn">关闭 (Esc / Tab)</button>
+      </div>
+    </div>
+
+    <div id="pause-menu" class="overlay hidden">
+      <div class="menu-panel small">
+        <h2>游戏暂停</h2>
+        <button id="btn-resume" class="menu-btn primary">继续游戏</button>
+        <button id="btn-save" class="menu-btn">保存进度（本局）</button>
+        <button id="btn-main-menu" class="menu-btn">回到主菜单</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="error-box" class="hidden"></div>
+
+  <script src="vendor/three.min.js?v=19"></script>
+  <script src="js/audio.js?v=19"></script>
+  <script src="js/utils.js?v=19"></script>
+  <script src="js/textures.js?v=19"></script>
+  <script src="js/world.js?v=19"></script>
+  <script src="js/entities.js?v=19"></script>
+  <script src="js/space.js?v=19"></script>
+  <script src="js/main.js?v=19"></script>
+</body>
+</html>

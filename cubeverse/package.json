@@ -1,0 +1,17 @@
+{
+  "name": "cubeverse",
+  "version": "1.0.0",
+  "description": "方块深空：我的世界 × 无人深空 融合网页游戏",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8080"
+  },
+  "keywords": [
+    "threejs",
+    "voxel",
+    "space",
+    "minecraft",
+    "nomanssky"
+  ],
+  "license": "MIT"
+}
