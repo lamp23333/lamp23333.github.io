@@ -30,7 +30,14 @@
       nf2: '可能网址有误，或该页面已不存在。',
       nfBack: '返回主页',
       dshHeading: '一键补丁脚本，让 DeepSeek Harness 在 Android Termux 环境正常运行。',
-      dshCta: '查看 GitHub 仓库'
+      dshCta: '查看 GitHub 仓库',
+     pjPageTitle: '项目展示 - LAMP白炽灯',
+     pjTitle: '项目展示',
+     pj1: 'Cubeverse（3D 小游戏）',
+     pj2: 'dsh-termux-fix（Termux 一键补丁）',
+     pj3: '示例项目 A',
+     pj4: '示例项目 B'
+
     },
 
     'zh-tw': {
@@ -54,7 +61,14 @@
       nf2: '可能網址有誤，或該頁面已不存在。',
       nfBack: '返回主頁',
       dshHeading: '一鍵補丁腳本，讓 DeepSeek Harness 在 Android Termux 環境正常運行。',
-      dshCta: '查看 GitHub 倉庫'
+      dshCta: '查看 GitHub 倉庫',
+     pjPageTitle: '項目展示 - LAMP白炽灯',
+     pjTitle: '項目展示',
+     pj1: 'Cubeverse（3D 小遊戲）',
+     pj2: 'dsh-termux-fix（Termux 一鍵補丁）',
+     pj3: '範例項目 A',
+     pj4: '範例項目 B'
+
     },
 
     en: {
@@ -78,7 +92,14 @@
       nf2: "The URL may be misspelled or the page you're looking for is no longer available.",
       nfBack: 'Back to Home',
       dshHeading: 'A one-click patch script that gets DeepSeek Harness running properly in an Android Termux environment.',
-      dshCta: 'View GitHub Repository'
+      dshCta: 'View GitHub Repository',
+     pjPageTitle: 'Projects - LAMP',
+     pjTitle: 'Projects',
+     pj1: 'Cubeverse (3D mini-game)',
+     pj2: 'dsh-termux-fix (Termux patch script)',
+     pj3: 'Sample project A',
+     pj4: 'Sample project B'
+
     }
   };
 
