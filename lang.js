@@ -91,7 +91,7 @@
       nf1: 'We are sorry, the page you requested cannot be found.',
       nf2: "The URL may be misspelled or the page you're looking for is no longer available.",
       nfBack: 'Back to Home',
-      dshHeading: 'A one-click patch script that gets DeepSeek Harness running properly in an Android Termux environment.',
+      dshHeading: 'A one-click patch script that gets DeepSeek Harness running properly in Termux on Android.',
       dshCta: 'View GitHub Repository',
      pjPageTitle: 'Projects - LAMP',
      pjTitle: 'Projects',
